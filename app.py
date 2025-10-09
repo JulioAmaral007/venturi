@@ -12,6 +12,9 @@ from matplotlib.patches import Rectangle
 import warnings
 warnings.filterwarnings('ignore')
 
+# Configurar matplotlib para tema escuro
+plt.style.use('dark_background')
+
 # Configuração da página
 st.set_page_config(
     page_title="Simulador de Venturi",
@@ -305,6 +308,463 @@ def plotar_linhas_energia(sim):
     return fig
 
 
+# ========== EXEMPLOS PRÁTICOS ==========
+
+def executar_exemplos():
+    """Interface para executar os exemplos práticos do simulador."""
+    st.header("📚 Exemplos Práticos")
+    st.markdown("Explore diferentes casos de uso do medidor de Venturi através de exemplos pré-configurados.")
+    
+    # Sidebar - Seleção de exemplo
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📋 Selecione o Exemplo")
+    
+    exemplo = st.sidebar.selectbox(
+        "Escolha um exemplo:",
+        [
+            "1. Comparação: Ideal vs Realista",
+            "2. Curva de Calibração",
+            "3. Modo Medidor (Δh → Q)",
+            "4. Sensibilidade ao Cd",
+            "5. Efeito da Razão Beta (β)"
+        ]
+    )
+    
+    st.sidebar.markdown("---")
+    st.sidebar.info("💡 **Dica:** Cada exemplo demonstra um aspecto importante do funcionamento do medidor de Venturi.")
+    
+    # Executar o exemplo selecionado
+    if "1." in exemplo:
+        exemplo_1_comparacao_modos()
+    elif "2." in exemplo:
+        exemplo_2_curva_calibracao()
+    elif "3." in exemplo:
+        exemplo_3_modo_medidor()
+    elif "4." in exemplo:
+        exemplo_4_sensibilidade_cd()
+    elif "5." in exemplo:
+        exemplo_5_efeito_beta()
+
+
+def exemplo_1_comparacao_modos():
+    """Exemplo 1: Comparação entre Modo Ideal e Modo Realista"""
+    st.subheader("🔵🔴 Exemplo 1: Comparação Modo Ideal vs Modo Realista")
+    st.markdown("---")
+    
+    st.markdown("""
+    Este exemplo compara o comportamento do medidor de Venturi em duas condições:
+    - **Modo Ideal**: Escoamento sem perdas (Cd = 1.0, sem atrito)
+    - **Modo Realista**: Escoamento com perdas por atrito e coeficiente de descarga real
+    """)
+    
+    # Parâmetros comuns
+    D1 = 0.10  # m
+    D2 = 0.05  # m
+    Q = 0.015  # m³/s
+    
+    # Modo Ideal
+    sim_ideal = VenturiSimulator()
+    sim_ideal.calcular(D1, D2, 1.0, 1000, 13600, Q, 0, 0.02, 1.0, 'Ideal')
+    
+    # Modo Realista
+    sim_real = VenturiSimulator()
+    sim_real.calcular(D1, D2, 1.0, 1000, 13600, Q, 0, 0.025, 0.96, 'Realista')
+    
+    # Mostrar resultados lado a lado
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### 🔵 Modo Ideal")
+        st.metric("Velocidade v₁", f"{sim_ideal.v1:.3f} m/s")
+        st.metric("Velocidade v₂", f"{sim_ideal.v2:.3f} m/s")
+        st.metric("Queda de Pressão ΔP", f"{sim_ideal.delta_P/1000:.3f} kPa")
+        st.metric("Desnível Δh", f"{sim_ideal.delta_h*100:.2f} cm")
+        st.metric("Perda de Carga hₗ", f"{sim_ideal.h_L:.6f} m", "zero")
+    
+    with col2:
+        st.markdown("### 🔴 Modo Realista")
+        st.metric("Velocidade v₁", f"{sim_real.v1:.3f} m/s")
+        st.metric("Velocidade v₂", f"{sim_real.v2:.3f} m/s")
+        st.metric("Queda de Pressão ΔP", f"{sim_real.delta_P/1000:.3f} kPa")
+        st.metric("Desnível Δh", f"{sim_real.delta_h*100:.2f} cm")
+        st.metric("Perda de Carga hₗ", f"{sim_real.h_L:.6f} m", "com perdas")
+    
+    # Análise das diferenças
+    st.markdown("---")
+    st.markdown("### 📊 Análise das Diferenças")
+    
+    diff_p = ((sim_real.delta_P - sim_ideal.delta_P) / sim_ideal.delta_P) * 100
+    diff_h = ((sim_real.delta_h - sim_ideal.delta_h) / sim_ideal.delta_h) * 100
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Aumento em ΔP", f"{diff_p:.2f}%")
+    with col2:
+        st.metric("Aumento em Δh", f"{diff_h:.2f}%")
+    with col3:
+        st.metric("Perda de Energia", f"{sim_real.h_L:.6f} m")
+    
+    # Gráficos comparativos
+    st.markdown("---")
+    st.markdown("### 📈 Visualizações Comparativas")
+    
+    tab1, tab2 = st.tabs(["Perfil de Pressão", "Linhas de Energia"])
+    
+    with tab1:
+        fig = plotar_perfil_pressao(sim_real)
+        st.pyplot(fig)
+        plt.close(fig)
+    
+    with tab2:
+        fig = plotar_linhas_energia(sim_real)
+        st.pyplot(fig)
+        plt.close(fig)
+
+
+def exemplo_2_curva_calibracao():
+    """Exemplo 2: Geração de Curva de Calibração"""
+    st.subheader("📈 Exemplo 2: Curva de Calibração do Medidor")
+    st.markdown("---")
+    
+    st.markdown("""
+    Este exemplo gera uma **curva de calibração** relacionando a vazão volumétrica (Q) 
+    com o desnível manométrico (Δh) para um medidor de Venturi específico.
+    """)
+    
+    # Criar simulador
+    sim = VenturiSimulator()
+    
+    # Faixa de vazões
+    vazoes = np.linspace(0.005, 0.030, 20)  # m³/s
+    desniveis = []
+    pressoes = []
+    reynolds = []
+    
+    # Calcular pontos da curva
+    with st.spinner('Gerando curva de calibração...'):
+        for q in vazoes:
+            sim.calcular(0.10, 0.05, 1.0, 1000, 13600, q, 0, 0.02, 0.97, 'Realista')
+            desniveis.append(sim.delta_h * 100)  # cm
+            pressoes.append(sim.delta_P / 1000)   # kPa
+            reynolds.append(sim.calcular_reynolds())
+    
+    # Resumo da calibração
+    st.markdown("### 📊 Resumo da Calibração")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Faixa de Vazão", f"{vazoes[0]*1000:.1f} - {vazoes[-1]*1000:.1f} L/s")
+    with col2:
+        st.metric("Faixa de Desnível", f"{desniveis[0]:.2f} - {desniveis[-1]:.2f} cm")
+    with col3:
+        st.metric("Faixa de ΔP", f"{pressoes[0]:.2f} - {pressoes[-1]:.2f} kPa")
+    
+    # Tabela de dados
+    st.markdown("---")
+    st.markdown("### 📋 Tabela de Calibração")
+    
+    import pandas as pd
+    df = pd.DataFrame({
+        'Q (L/s)': [q*1000 for q in vazoes],
+        'Q (m³/h)': [q*3600 for q in vazoes],
+        'Δh (cm)': desniveis,
+        'ΔP (kPa)': pressoes,
+        'Reynolds': [int(re) for re in reynolds]
+    })
+    
+    st.dataframe(df.style.format({
+        'Q (L/s)': '{:.2f}',
+        'Q (m³/h)': '{:.2f}',
+        'Δh (cm)': '{:.2f}',
+        'ΔP (kPa)': '{:.3f}',
+        'Reynolds': '{:,.0f}'
+    }), width='stretch')
+    
+    # Gráfico da curva de calibração
+    st.markdown("---")
+    st.markdown("### 📈 Curva de Calibração")
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(np.array(vazoes) * 1000, desniveis, 'bo-', linewidth=2, markersize=6)
+    ax.set_xlabel('Vazão (L/s)', fontsize=12)
+    ax.set_ylabel('Desnível Manométrico Δh (cm)', fontsize=12)
+    ax.set_title('Curva de Calibração do Medidor de Venturi', fontsize=14, fontweight='bold')
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    
+    st.pyplot(fig)
+    plt.close(fig)
+    
+    st.success("✅ A curva mostra a relação quadrática entre vazão e desnível: Q ∝ √(Δh)")
+
+
+def exemplo_3_modo_medidor():
+    """Exemplo 3: Uso do Modo Medidor (calcular vazão a partir de Δh)"""
+    st.subheader("🔬 Exemplo 3: Modo Medidor - Calcular Vazão a partir de Δh")
+    st.markdown("---")
+    
+    st.markdown("""
+    Este exemplo demonstra o uso **prático** do medidor de Venturi: 
+    medir o desnível manométrico (Δh) e calcular a vazão (Q) correspondente.
+    """)
+    
+    # Criar simulador
+    sim = VenturiSimulator()
+    
+    # Diferentes desníveis
+    desniveis = [0.05, 0.10, 0.15, 0.20, 0.25]  # m
+    resultados = []
+    
+    for dh in desniveis:
+        sim.calcular(0.10, 0.05, 1.0, 1000, 13600, 0, dh, 0.02, 0.98, 'Medidor')
+        resultados.append({
+            'Δh (cm)': dh * 100,
+            'Q (L/s)': sim.Q * 1000,
+            'Q (m³/h)': sim.Q * 3600,
+            'v₁ (m/s)': sim.v1,
+            'v₂ (m/s)': sim.v2,
+            'ΔP (kPa)': sim.delta_P / 1000
+        })
+    
+    # Tabela de resultados
+    st.markdown("### 📋 Resultados para Diferentes Desníveis")
+    
+    import pandas as pd
+    df = pd.DataFrame(resultados)
+    
+    st.dataframe(df.style.format({
+        'Δh (cm)': '{:.1f}',
+        'Q (L/s)': '{:.2f}',
+        'Q (m³/h)': '{:.2f}',
+        'v₁ (m/s)': '{:.3f}',
+        'v₂ (m/s)': '{:.3f}',
+        'ΔP (kPa)': '{:.3f}'
+    }), width='stretch')
+    
+    # Gráfico Q vs Δh
+    st.markdown("---")
+    st.markdown("### 📈 Relação Q = f(√Δh)")
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    
+    # Gráfico 1: Q vs Δh
+    ax1.plot(df['Δh (cm)'], df['Q (L/s)'], 'ro-', linewidth=2, markersize=8)
+    ax1.set_xlabel('Desnível Manométrico Δh (cm)', fontsize=11)
+    ax1.set_ylabel('Vazão Q (L/s)', fontsize=11)
+    ax1.set_title('Vazão vs Desnível', fontsize=12, fontweight='bold')
+    ax1.grid(True, alpha=0.3)
+    
+    # Gráfico 2: Q vs √Δh (deve ser linear)
+    ax2.plot(np.sqrt(df['Δh (cm)']), df['Q (L/s)'], 'bs-', linewidth=2, markersize=8)
+    ax2.set_xlabel('√(Δh) [√cm]', fontsize=11)
+    ax2.set_ylabel('Vazão Q (L/s)', fontsize=11)
+    ax2.set_title('Vazão vs √Desnível (Relação Linear)', fontsize=12, fontweight='bold')
+    ax2.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    st.pyplot(fig)
+    plt.close(fig)
+    
+    # Observação importante
+    st.info("""
+    💡 **Observação Importante:**
+    - A vazão é proporcional à raiz quadrada do desnível: **Q ∝ √(Δh)**
+    - Dobrando Δh, a vazão aumenta por um fator de √2 ≈ 1.41
+    - O gráfico Q vs √(Δh) é aproximadamente linear
+    """)
+
+
+def exemplo_4_sensibilidade_cd():
+    """Exemplo 4: Análise de Sensibilidade ao Coeficiente de Descarga"""
+    st.subheader("⚙️ Exemplo 4: Sensibilidade ao Coeficiente de Descarga (Cd)")
+    st.markdown("---")
+    
+    st.markdown("""
+    Este exemplo analisa como o **coeficiente de descarga (Cd)** afeta as medições de vazão.
+    O Cd leva em conta perdas e efeitos não ideais no escoamento.
+    """)
+    
+    # Criar simulador
+    sim = VenturiSimulator()
+    
+    # Diferentes valores de Cd
+    cd_values = np.linspace(0.90, 1.00, 11)
+    resultados = []
+    
+    q_referencia = None
+    
+    for cd in cd_values:
+        sim.calcular(0.10, 0.05, 1.0, 1000, 13600, 0, 0.15, 0.02, cd, 'Medidor')
+        
+        if q_referencia is None:
+            q_referencia = sim.Q * 1000
+            variacao = 0
+        else:
+            variacao = ((sim.Q * 1000 - q_referencia) / q_referencia) * 100
+        
+        resultados.append({
+            'Cd': cd,
+            'Q (L/s)': sim.Q * 1000,
+            'Variação (%)': variacao,
+            'ΔP (kPa)': sim.delta_P / 1000
+        })
+    
+    # Tabela de resultados
+    st.markdown("### 📋 Efeito de Cd na Vazão (Δh fixo = 15 cm)")
+    
+    import pandas as pd
+    df = pd.DataFrame(resultados)
+    
+    st.dataframe(df.style.format({
+        'Cd': '{:.2f}',
+        'Q (L/s)': '{:.3f}',
+        'Variação (%)': '{:.2f}',
+        'ΔP (kPa)': '{:.3f}'
+    }), width='stretch')
+    
+    # Análise estatística
+    st.markdown("---")
+    st.markdown("### 📊 Análise Estatística")
+    
+    vazao_min = df['Q (L/s)'].min()
+    vazao_max = df['Q (L/s)'].max()
+    variacao_total = ((vazao_max - vazao_min) / vazao_min) * 100
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Vazão Mínima (Cd=0.90)", f"{vazao_min:.3f} L/s")
+    with col2:
+        st.metric("Vazão Máxima (Cd=1.00)", f"{vazao_max:.3f} L/s")
+    with col3:
+        st.metric("Variação Total", f"{variacao_total:.1f}%")
+    
+    # Gráfico
+    st.markdown("---")
+    st.markdown("### 📈 Visualização do Efeito de Cd")
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(df['Cd'], df['Q (L/s)'], 'go-', linewidth=2.5, markersize=8)
+    ax.set_xlabel('Coeficiente de Descarga (Cd)', fontsize=12)
+    ax.set_ylabel('Vazão Q (L/s)', fontsize=12)
+    ax.set_title('Sensibilidade da Vazão ao Coeficiente Cd', fontsize=14, fontweight='bold')
+    ax.grid(True, alpha=0.3)
+    ax.axhline(y=vazao_min, color='r', linestyle='--', alpha=0.5, label=f'Q mín = {vazao_min:.3f} L/s')
+    ax.axhline(y=vazao_max, color='g', linestyle='--', alpha=0.5, label=f'Q máx = {vazao_max:.3f} L/s')
+    ax.legend()
+    plt.tight_layout()
+    
+    st.pyplot(fig)
+    plt.close(fig)
+    
+    # Alerta importante
+    st.warning(f"""
+    ⚠️ **IMPORTANTE:**
+    - Uma variação de 10% em Cd causa **{variacao_total:.1f}%** de variação na vazão!
+    - É crucial ter um Cd preciso para medições confiáveis
+    - O Cd típico para Venturi varia entre 0.95 e 0.98
+    - O Cd depende do número de Reynolds e da geometria do medidor
+    """)
+
+
+def exemplo_5_efeito_beta():
+    """Exemplo 5: Efeito da Razão Beta (β = D₂/D₁)"""
+    st.subheader("📐 Exemplo 5: Efeito da Razão Beta (β = D₂/D₁)")
+    st.markdown("---")
+    
+    st.markdown("""
+    Este exemplo analisa como a **razão de diâmetros β** afeta o desempenho do medidor.
+    β é a razão entre o diâmetro da garganta (D₂) e o diâmetro de entrada (D₁).
+    """)
+    
+    # Parâmetros fixos
+    D1 = 0.10  # m
+    Q = 0.015  # m³/s (fixo)
+    
+    # Diferentes valores de D2 (β)
+    beta_values = np.linspace(0.3, 0.7, 9)
+    resultados = []
+    
+    for beta in beta_values:
+        D2 = beta * D1
+        
+        sim = VenturiSimulator()
+        sim.calcular(D1, D2, 1.0, 1000, 13600, Q, 0, 0.02, 1.0, 'Ideal')
+        
+        resultados.append({
+            'β': beta,
+            'D₂ (cm)': D2 * 100,
+            'Δh (cm)': sim.delta_h * 100,
+            'ΔP (kPa)': sim.delta_P / 1000,
+            'v₂ (m/s)': sim.v2,
+            'v₂/v₁': sim.v2 / sim.v1
+        })
+    
+    # Tabela de resultados
+    st.markdown(f"### 📋 Efeito de β (D₁={D1*100:.0f} cm, Q={Q*1000:.0f} L/s fixo)")
+    
+    import pandas as pd
+    df = pd.DataFrame(resultados)
+    
+    st.dataframe(df.style.format({
+        'β': '{:.2f}',
+        'D₂ (cm)': '{:.2f}',
+        'Δh (cm)': '{:.2f}',
+        'ΔP (kPa)': '{:.2f}',
+        'v₂ (m/s)': '{:.2f}',
+        'v₂/v₁': '{:.2f}'
+    }), width='stretch')
+    
+    # Gráficos
+    st.markdown("---")
+    st.markdown("### 📈 Visualizações do Efeito de β")
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    
+    # Gráfico 1: Δh vs β
+    ax1.plot(df['β'], df['Δh (cm)'], 'ro-', linewidth=2.5, markersize=8)
+    ax1.set_xlabel('Razão β = D₂/D₁', fontsize=11)
+    ax1.set_ylabel('Desnível Δh (cm)', fontsize=11)
+    ax1.set_title('Desnível vs Razão Beta', fontsize=12, fontweight='bold')
+    ax1.grid(True, alpha=0.3)
+    ax1.axvspan(0.4, 0.7, alpha=0.2, color='green', label='Faixa típica')
+    ax1.legend()
+    
+    # Gráfico 2: v₂ vs β
+    ax2.plot(df['β'], df['v₂ (m/s)'], 'bs-', linewidth=2.5, markersize=8)
+    ax2.set_xlabel('Razão β = D₂/D₁', fontsize=11)
+    ax2.set_ylabel('Velocidade na garganta v₂ (m/s)', fontsize=11)
+    ax2.set_title('Velocidade vs Razão Beta', fontsize=12, fontweight='bold')
+    ax2.grid(True, alpha=0.3)
+    ax2.axvspan(0.4, 0.7, alpha=0.2, color='green', label='Faixa típica')
+    ax2.legend()
+    
+    plt.tight_layout()
+    st.pyplot(fig)
+    plt.close(fig)
+    
+    # Observações
+    st.markdown("---")
+    st.markdown("### 📊 Observações Importantes")
+    
+    st.info("""
+    **Efeitos da Razão Beta:**
+    
+    - **Menor β** (garganta mais estreita):
+      - ✅ Maior velocidade na garganta
+      - ✅ Maior queda de pressão (maior sensibilidade)
+      - ❌ Maior perda de carga permanente
+    
+    - **Maior β** (garganta mais larga):
+      - ✅ Menor perda de carga
+      - ❌ Menor queda de pressão (menor sensibilidade)
+      - ❌ Menor velocidade na garganta
+    
+    - **β típico para Venturi**: 0.4 - 0.7
+    - **Compromisso**: Sensibilidade vs Perda de Carga
+    """)
+
+
 # ========== INTERFACE STREAMLIT ==========
 
 def main():
@@ -315,10 +775,22 @@ def main():
     # Sidebar com controles
     st.sidebar.header("⚙️ Parâmetros de Controle")
     
-    # Seletor de modo
+    # Seletor de modo (Simulação ou Exemplos)
     st.sidebar.subheader("🎯 Modo de Operação")
+    app_mode = st.sidebar.radio(
+        "Escolha o modo:",
+        options=['Simulação Interativa', 'Exemplos Práticos'],
+        help="Simulação: configure parâmetros manualmente | Exemplos: veja casos pré-configurados"
+    )
+    
+    # Se modo Exemplos foi selecionado
+    if app_mode == 'Exemplos Práticos':
+        executar_exemplos()
+        return
+    
+    # Continuar com simulação interativa
     mode = st.sidebar.radio(
-        "Selecione o modo:",
+        "Tipo de simulação:",
         options=['Ideal', 'Realista', 'Medidor'],
         help="Ideal: sem perdas | Realista: com perdas | Medidor: calcula Q a partir de Δh"
     )
