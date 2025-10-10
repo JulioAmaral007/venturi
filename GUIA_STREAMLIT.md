@@ -320,17 +320,27 @@ A interface é totalmente responsiva!
 
 ## ⚙️ Personalização
 
-### Tema (Claro/Escuro)
+### Tema (Claro/Escuro) e Estilo Inline
 
 1. Clique em `⚙️` (canto superior direito)
 2. `Settings` → `Choose app theme`
 3. Escolha: Light / Dark / Custom
 
+Notas de estilo:
+
+- A aplicação usa estilos inline (HTML) para cabeçalhos, caixas de informação e alertas
+- O título principal só aparece quando o modo selecionado é “Simulação Interativa”
+
 ### Modificar Código
 
-Edite `app.py` para adicionar recursos:
+Estrutura modular para facilitar manutenção:
 
-**Adicionar novo gráfico:**
+- `app_modules/simulator.py`: lógica de cálculo (`VenturiSimulator`)
+- `app_modules/plots.py`: funções de gráficos (Matplotlib)
+- `app_modules/examples.py`: aba “Exemplos Práticos”
+- `app.py`: fluxo da UI e composição
+
+**Adicionar novo gráfico (em `app_modules/plots.py`):**
 
 ```python
 def plotar_novo_grafico(sim):
@@ -338,14 +348,14 @@ def plotar_novo_grafico(sim):
     # Seu código aqui
     return fig
 
-# No main():
+# No app (ex.: nova aba no main):
 with tab6:  # Adicionar nova aba
     st.subheader("Novo Gráfico")
     fig = plotar_novo_grafico(sim)
     st.pyplot(fig)
 ```
 
-**Exportar dados:**
+**Exportar dados (no app):**
 
 ```python
 import pandas as pd

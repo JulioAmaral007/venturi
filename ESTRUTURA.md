@@ -17,13 +17,16 @@ streamlit run app.py
 ## 📦 Arquivos do Projeto
 
 ```
-hisdrostatica/
+venturi/
 │
 ├── 🎯 APLICAÇÃO
-│   └── app.py                    # Aplicação web principal
+│   └── app.py                    # Aplicação web principal (Streamlit)
 │
-├── 📝 EXEMPLOS
-│   └── exemplo_uso.py            # Exemplos de uso programático
+├── 🧩 MÓDULOS DA APLICAÇÃO
+│   └── app_modules/
+│       ├── simulator.py          # Lógica de cálculo (VenturiSimulator)
+│       ├── plots.py              # Funções de plotagem (matplotlib)
+│       └── examples.py           # Interface dos exemplos (Streamlit)
 │
 ├── 📚 DOCUMENTAÇÃO
 │   ├── README.md                 # Visão geral e início rápido
@@ -35,11 +38,11 @@ hisdrostatica/
 ├── ⚙️ CONFIGURAÇÃO
 │   ├── requirements.txt          # Dependências do projeto
 │   └── .streamlit/
-│       └── config.toml           # Configurações do Streamlit
+│       └── config.toml           # Configurações do Streamlit (opcional)
 │
 └── 📊 DADOS (criado em tempo de execução)
     └── .streamlit/
-        └── cache/                # Cache de performance
+        └── cache/                # Cache de performance (automático)
 ```
 
 ---
@@ -81,17 +84,22 @@ hisdrostatica/
 - Equações implementadas
 - Conceitos de mecânica dos fluidos
 
-### Código
+### Código (módulos)
 
-**`exemplo_uso.py`**
+**`app_modules/simulator.py`**
 
-- Exemplos de uso programático
-- 5 exemplos diferentes:
-  1. Comparação Ideal vs Realista
-  2. Curva de calibração
-  3. Modo Medidor
-  4. Sensibilidade ao Cd
-  5. Efeito do Beta (β)
+- Classe `VenturiSimulator`
+- Implementa cálculos para os três modos
+
+**`app_modules/plots.py`**
+
+- Funções de plot da interface
+- Responsáveis pelos gráficos das abas
+
+**`app_modules/examples.py`**
+
+- Implementa a aba “Exemplos Práticos”
+- Casos pré-configurados de uso
 
 ### Configuração
 
@@ -129,11 +137,11 @@ python exemplo_uso.py
 
 ---
 
-## 📊 Estatísticas
+## 📊 Estatísticas (aprox.)
 
-- **Arquivos Python:** 2
-- **Linhas de código:** ~500
-- **Documentação:** 4 arquivos
+- **Arquivos Python:** 4 (app + 3 módulos)
+- **Linhas de código:** ~1.1k
+- **Documentação:** 5 arquivos
 - **Modos de operação:** 3
 - **Parâmetros ajustáveis:** 9
 - **Gráficos:** 4

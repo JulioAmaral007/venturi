@@ -12,6 +12,7 @@ pip install -r requirements.txt
 
 ```bash
 streamlit run app.py
+# título principal só aparece no modo "Simulação Interativa"
 ```
 
 ### 3. Usar
@@ -34,13 +35,15 @@ Interface abre em `http://localhost:8501` 🎉
 
 ---
 
-## 🎯 Exemplo Prático
+## 🎯 Exemplo Prático (Δh → Q)
 
 **Calcular vazão com Δh = 12 cm:**
 
 1. Modo: `Medidor`
 2. Δh: `0.12 m`
 3. Veja o resultado! ≈ 14 L/s
+
+Observação: a interface agora foi modularizada (simulador/plots/exemplos em `app_modules/`).
 
 ---
 

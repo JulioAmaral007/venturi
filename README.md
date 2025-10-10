@@ -160,13 +160,17 @@ hₗ = f(L/D)(v²/2g)
 ## 📁 Estrutura do Projeto
 
 ```
-hisdrostatica/
-├── app.py                 # 🎯 Aplicação principal
-├── exemplo_uso.py         # 📝 Exemplos programáticos
-├── requirements.txt       # 📦 Dependências
-├── README.md             # 📖 Este arquivo
-├── GUIA_STREAMLIT.md     # 📚 Guia detalhado
-└── Venturi.md            # 🎓 Teoria completa
+venturi/
+├── app.py                  # 🎯 Aplicação Streamlit (ponto de entrada)
+├── app_modules/            # 🧩 Código modular
+│   ├── simulator.py        # Lógica de cálculos (VenturiSimulator)
+│   ├── plots.py            # Funções de plotagem (matplotlib)
+│   └── examples.py         # Interface dos exemplos (Streamlit)
+├── requirements.txt        # 📦 Dependências
+├── README.md               # 📖 Este arquivo
+├── GUIA_STREAMLIT.md       # 📚 Guia detalhado
+├── ESTRUTURA.md            # 🗂️ Organização do projeto
+└── Venturi.md              # 🎓 Fundamentação teórica
 ```
 
 ---
@@ -176,12 +180,9 @@ hisdrostatica/
 Além da interface web, você pode usar o simulador em scripts Python:
 
 ```python
-from app import VenturiSimulator
+from app_modules.simulator import VenturiSimulator
 
-# Criar simulador
 sim = VenturiSimulator()
-
-# Configurar
 sim.calcular(
     D1=0.10, D2=0.05, L=1.0,
     rho=1000, rho_m=13600,
@@ -190,13 +191,10 @@ sim.calcular(
     mode='Ideal'
 )
 
-# Resultados
 print(f"v₁ = {sim.v1:.3f} m/s")
 print(f"v₂ = {sim.v2:.3f} m/s")
 print(f"Δh = {sim.delta_h*100:.2f} cm")
 ```
-
-📝 **Mais exemplos:** [exemplo_uso.py](exemplo_uso.py)
 
 ---
 
@@ -210,12 +208,12 @@ print(f"Δh = {sim.delta_h*100:.2f} cm")
 
 ### Modificar Código
 
-Edite `app.py` para:
+- Edite `app_modules/simulator.py` para lógica de cálculos
+- Edite `app_modules/plots.py` para gráficos (matplotlib)
+- Edite `app_modules/examples.py` para a aba de exemplos
+- Edite `app.py` para ajustes de UI/fluxo
 
-- Adicionar novos gráficos
-- Incluir mais fluidos
-- Exportar dados
-- Customizar visual
+Nota: A estilização usa estilos inline e o título principal só aparece no modo “Simulação Interativa”.
 
 ---
 
