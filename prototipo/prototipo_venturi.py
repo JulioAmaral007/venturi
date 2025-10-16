@@ -124,6 +124,86 @@ def plotar_diagrama_venturi(sim):
     plt.tight_layout()
     return fig
 
+def plotar_manometro(sim):
+    """Cria visualização do manômetro diferencial em U"""
+    fig, ax = plt.subplots(figsize=(10, 8), facecolor='white')
+    ax.set_facecolor('white')
+    
+    # Dimensões do manômetro
+    largura = 0.3
+    altura_total = 4
+    altura_fluido = 2
+    desnivel = sim.delta_h * 100  # Converter para cm
+    
+    # Posições
+    x_esquerda = 2
+    x_direita = 4
+    y_base = 1
+    y_esquerda = y_base + altura_fluido
+    y_direita = y_base + altura_fluido - desnivel
+    
+    # Desenhar o manômetro em U
+    # Lado esquerdo (P1)
+    ax.plot([x_esquerda, x_esquerda], [y_base, y_esquerda], 'k-', linewidth=4, label='Lado Esquerdo (P₁)')
+    ax.plot([x_esquerda-largura/2, x_esquerda+largura/2], [y_base, y_base], 'k-', linewidth=4)
+    ax.plot([x_esquerda-largura/2, x_esquerda+largura/2], [y_esquerda, y_esquerda], 'k-', linewidth=4)
+    
+    # Lado direito (P2)
+    ax.plot([x_direita, x_direita], [y_base, y_direita], 'k-', linewidth=4, label='Lado Direito (P₂)')
+    ax.plot([x_direita-largura/2, x_direita+largura/2], [y_base, y_base], 'k-', linewidth=4)
+    ax.plot([x_direita-largura/2, x_direita+largura/2], [y_direita, y_direita], 'k-', linewidth=4)
+    
+    # Conexão inferior
+    ax.plot([x_esquerda, x_direita], [y_base, y_base], 'k-', linewidth=4)
+    
+    # Preencher com líquido manométrico
+    ax.fill_between([x_esquerda-largura/2, x_esquerda+largura/2], y_base, y_esquerda, 
+                   alpha=0.3, color='red', label='Líquido Manométrico')
+    ax.fill_between([x_direita-largura/2, x_direita+largura/2], y_base, y_direita, 
+                   alpha=0.3, color='red')
+    ax.fill_between([x_esquerda, x_direita], y_base-0.1, y_base+0.1, 
+                   alpha=0.3, color='red')
+    
+    # Nível de referência
+    ax.axhline(y=y_esquerda, color='blue', linestyle='--', alpha=0.7, linewidth=2, label='Nível de Referência')
+    
+    # Desnível Δh
+    if desnivel > 0:
+        ax.annotate(f'Δh = {desnivel:.2f} cm', 
+                   xy=(3, (y_esquerda + y_direita)/2), 
+                   xytext=(3, (y_esquerda + y_direita)/2 + 0.5),
+                   ha='center', fontsize=12, fontweight='bold',
+                   bbox=dict(boxstyle="round,pad=0.3", facecolor="yellow", alpha=0.7),
+                   arrowprops=dict(arrowstyle='<->', color='red', lw=2))
+    
+    # Anotações de pressão
+    ax.annotate('P₁', xy=(x_esquerda, y_esquerda), xytext=(x_esquerda-0.8, y_esquerda+0.3),
+               ha='center', fontsize=14, fontweight='bold', color='blue',
+               bbox=dict(boxstyle="round,pad=0.2", facecolor="lightblue", alpha=0.8))
+    
+    ax.annotate('P₂', xy=(x_direita, y_direita), xytext=(x_direita+0.8, y_direita+0.3),
+               ha='center', fontsize=14, fontweight='bold', color='blue',
+               bbox=dict(boxstyle="round,pad=0.2", facecolor="lightblue", alpha=0.8))
+    
+    # Configurações do gráfico
+    ax.set_xlim(1, 5)
+    ax.set_ylim(0, 5)
+    ax.set_xlabel('Posição (m)', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Altura (m)', fontsize=12, fontweight='bold')
+    ax.set_title('Manômetro Diferencial em U', fontsize=14, fontweight='bold')
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc='upper right')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+    # Adicionar informações dos resultados
+    info_text = f'Resultados:\nΔh = {desnivel:.2f} cm\nΔP = {sim.delta_P/1000:.3f} kPa\nQ = {sim.Q*1000:.2f} L/s'
+    ax.text(0.02, 0.98, info_text, transform=ax.transAxes, fontsize=10,
+            verticalalignment='top', bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgreen", alpha=0.8))
+    
+    plt.tight_layout()
+    return fig
+
 def main():
     # Título principal
     st.markdown("""
@@ -208,35 +288,52 @@ def main():
     
     st.markdown("---")
     
-    # Layout em duas colunas
-    col_left, col_right = st.columns([1, 1])
+    # Abas para organizar visualizações
+    tab1, tab2, tab3 = st.tabs([
+        "📐 Diagrama", "🔬 Manômetro", "📋 Resultados"
+    ])
     
-    with col_left:
-        st.subheader("📐 Diagrama do Venturi")
+    with tab1:
+        st.subheader("Diagrama Esquemático do Venturi")
         fig = plotar_diagrama_venturi(sim)
         st.pyplot(fig)
         plt.close(fig)
     
-    with col_right:
-        st.subheader("📋 Resultados Detalhados")
+    with tab2:
+        st.subheader("Manômetro Diferencial em U")
+        fig = plotar_manometro(sim)
+        st.pyplot(fig)
+        plt.close(fig)
+    
+    with tab3:
+        st.subheader("Resultados Detalhados")
         
-        st.markdown("**GEOMETRIA:**")
-        st.write(f"• D₁ = {sim.D1*100:.1f} cm")
-        st.write(f"• D₂ = {sim.D2*100:.1f} cm")
-        st.write(f"• β = D₂/D₁ = {sim.D2/sim.D1:.3f}")
+        col_a, col_b = st.columns(2)
         
-        st.markdown("")
-        st.markdown("**PROPRIEDADES:**")
-        st.write(f"• ρ (fluido) = {sim.rho:.0f} kg/m³")
-        st.write(f"• ρₘ (manométrico) = {sim.rho_m:.0f} kg/m³")
+        with col_a:
+            st.markdown("**GEOMETRIA:**")
+            st.write(f"• D₁ = {sim.D1*100:.1f} cm")
+            st.write(f"• D₂ = {sim.D2*100:.1f} cm")
+            st.write(f"• β = D₂/D₁ = {sim.D2/sim.D1:.3f}")
+            
+            st.markdown("")
+            st.markdown("**PROPRIEDADES:**")
+            st.write(f"• ρ (fluido) = {sim.rho:.0f} kg/m³")
+            st.write(f"• ρₘ (manométrico) = {sim.rho_m:.0f} kg/m³")
         
-        st.markdown("")
-        st.markdown("**RESULTADOS:**")
-        st.write(f"• Vazão Q = {sim.Q*1000:.2f} L/s")
-        st.write(f"• Δh = {sim.delta_h*100:.2f} cm")
-        st.write(f"• v₁ = {sim.v1:.3f} m/s")
-        st.write(f"• v₂ = {sim.v2:.3f} m/s")
-        st.write(f"• ΔP = {sim.delta_P/1000:.3f} kPa")
+        with col_b:
+            st.markdown("**RESULTADOS:**")
+            st.write(f"• Vazão Q = {sim.Q*1000:.2f} L/s")
+            st.write(f"• Δh = {sim.delta_h*100:.2f} cm")
+            st.write(f"• v₁ = {sim.v1:.3f} m/s")
+            st.write(f"• v₂ = {sim.v2:.3f} m/s")
+            st.write(f"• ΔP = {sim.delta_P/1000:.3f} kPa")
+            
+            st.markdown("")
+            st.markdown("**PRESSÕES:**")
+            st.write(f"• P₁ = {sim.P1/1000:.2f} kPa")
+            st.write(f"• P₂ = {sim.P2/1000:.2f} kPa")
+            st.write(f"• ΔP = {sim.delta_P/1000:.3f} kPa")
     
     # Informações sobre o protótipo
     st.markdown("---")
