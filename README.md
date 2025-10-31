@@ -1,112 +1,132 @@
-# 🔬 SIMULADOR DE MEDIDOR DE VENTURI
+# 🔬 SIMULADOR COMPLETO DE MEDIDOR DE VENTURI
 
-## 📋 **SOBRE O PROJETO**
+## 📋 **SOBRE O TRABALHO COMPLETO**
 
-Este repositório contém o desenvolvimento completo de um **Simulador Interativo de Medidor de Venturi**, uma ferramenta educacional desenvolvida em Python/Streamlit para ensino de mecânica dos fluidos e instrumentação industrial.
+Este diretório contém o **trabalho final completo** do Simulador de Medidor de Venturi, uma aplicação web avançada desenvolvida com Streamlit para ensino de mecânica dos fluidos e instrumentação industrial.
 
-## 📁 **ESTRUTURA DO REPOSITÓRIO**
+## 🚀 **EXECUÇÃO RÁPIDA**
 
-```
-venturi/
-├── prototipo/                 # Protótipo para demonstração
-│   ├── prototipo_venturi.py  # Aplicação simplificada
-│   ├── APRESENTACAO_PROTOTIPO.md
-│   ├── RELATORIO_PROTOTIPO.md
-│   └── README.md
-├── trabalho_completo/         # Trabalho final completo
-│   ├── app.py                # Aplicação principal
-│   ├── app_modules/          # Módulos especializados
-│   ├── requirements.txt      # Dependências
-│   └── README.md
-└── README.md                 # Este arquivo
-```
-
-## 🚀 **INÍCIO RÁPIDO**
-
-### **Para Demonstração (Protótipo):**
 ```bash
-cd prototipo/
-pip install streamlit numpy matplotlib
-streamlit run prototipo_venturi.py
-```
-
-### **Para Uso Completo (Trabalho Final):**
-```bash
-cd trabalho_completo/
+# Instalar dependências
 pip install -r requirements.txt
+
+# Executar a aplicação completa
 streamlit run app.py
 ```
 
-## 🎯 **FUNCIONALIDADES**
+## 📁 **ESTRUTURA DO PROJETO**
 
-### **Protótipo:**
-- ✅ Interface básica com controles essenciais
-- ✅ Dois modos de operação (Simulação e Medidor)
-- ✅ Cálculos da equação de Bernoulli
-- ✅ Visualização do diagrama do Venturi
-- ✅ Manômetro diferencial em U
-- ✅ Resultados numéricos organizados
+```
+trabalho_completo/
+├── app.py                    # Aplicação principal
+├── app_modules/              # Módulos especializados
+│   ├── simulator.py         # Classe VenturiSimulator
+│   ├── plots.py             # Funções de visualização
+│   └── examples.py           # Exemplos práticos
+├── requirements.txt          # Dependências Python
+├── .streamlit/               # Configurações Streamlit
+├── .gitignore               # Arquivos ignorados pelo Git
+└── README.md                 # Este arquivo
+```
 
-### **Trabalho Completo:**
-- ✅ **Simulação Interativa** com 3 modos (Ideal, Realista, Medidor)
-- ✅ **Visualizações Avançadas** (perfil de pressão, linhas de energia)
-- ✅ **Exemplos Práticos** (5 exemplos educacionais)
-- ✅ **Funcionalidades Profissionais** (exportação, relatórios)
-- ✅ **Análise Estatística** e sensibilidade de parâmetros
+## 🎯 **FUNCIONALIDADES COMPLETAS**
+
+### ✅ **Simulação Interativa:**
+- Interface completa com controles avançados
+- Três modos de operação (Ideal, Realista, Medidor)
+- Cálculos com perdas por atrito
+- Análise do número de Reynolds
+- Coeficiente de descarga (Cd)
+
+### ✅ **Visualizações Avançadas:**
+- Diagrama esquemático do Venturi
+- Manômetro diferencial em U
+- Perfil de pressão ao longo do tubo
+- Linhas de energia e piezométrica
+- Gráficos de calibração
+
+### ✅ **Exemplos Práticos:**
+- Comparação Modo Ideal vs Realista
+- Geração de curva de calibração
+- Uso prático do medidor
+- Análise de sensibilidade ao Cd
+- Efeito da razão β = D₂/D₁
+
+### ✅ **Funcionalidades Profissionais:**
+- Análise estatística dos resultados
+- Exportação de dados (CSV, Excel)
+- Relatórios automáticos em PDF
+- Simulação de diferentes fluidos
+- Análise de incertezas
+
+## 📊 **COMO USAR**
+
+### **1. Modo Simulação Interativa:**
+- Configure parâmetros na sidebar
+- Escolha entre modos Ideal, Realista ou Medidor
+- Visualize resultados em tempo real
+- Navegue pelas abas de visualização
+
+### **2. Modo Exemplos Práticos:**
+- Selecione "Exemplos Práticos" na sidebar
+- Explore os 5 exemplos pré-configurados
+- Analise diferentes cenários
+- Compreenda aplicações práticas
 
 ## 🎓 **VALOR EDUCACIONAL**
 
-### **Conceitos Abordados:**
-- **Mecânica dos fluidos:** Equação de Bernoulli, conservação de energia
-- **Instrumentação:** Medidores de pressão diferencial, manômetros
-- **Análise de escoamento:** Regimes laminar/turbulento, número de Reynolds
-- **Aplicações práticas:** Calibração de medidores, análise de sensibilidade
+### **Para Estudantes:**
+- Aprendizado visual dos conceitos
+- Experimentação interativa
+- Compreensão da equação de Bernoulli
+- Análise de parâmetros e sensibilidade
 
-### **Público-Alvo:**
-- **Estudantes:** Aprendizado visual e interativo
-- **Professores:** Ferramenta de demonstração em sala
-- **Profissionais:** Prototipagem e análise de projetos
+### **Para Professores:**
+- Ferramenta de demonstração em sala
+- Exercícios práticos configuráveis
+- Material didático complementar
+- Avaliação automática de resultados
 
-## 📚 **DOCUMENTAÇÃO**
+### **Para Profissionais:**
+- Prototipagem de medidores
+- Análise de viabilidade de projetos
+- Calibração de instrumentos
+- Treinamento técnico de equipes
 
-### **Protótipo:**
-- **`prototipo/APRESENTACAO_PROTOTIPO.md`** - Apresentação completa
-- **`prototipo/RELATORIO_PROTOTIPO.md`** - Relatório técnico formal
+## 📚 **DOCUMENTAÇÃO COMPLETA**
 
-### **Trabalho Completo:**
-- **`trabalho_completo/LEIAME_PRIMEIRO.md`** - Guia de início
-- **`trabalho_completo/GUIA_STREAMLIT.md`** - Guia completo
-- **`trabalho_completo/ESTRUTURA.md`** - Estrutura do projeto
+- **`LEIAME_PRIMEIRO.md`** - Guia de início rápido
+- **`QUICK_START.md`** - Instruções de execução
+- **`GUIA_STREAMLIT.md`** - Guia completo do Streamlit
+- **`ESTRUTURA.md`** - Estrutura detalhada do projeto
+- **`Venturi.md`** - Documentação técnica do medidor
 
-## 🛠️ **TECNOLOGIAS**
+## 🛠️ **TECNOLOGIAS UTILIZADAS**
 
 - **Python 3.8+** - Linguagem principal
-- **Streamlit** - Framework web interativo
+- **Streamlit** - Framework web
 - **NumPy** - Cálculos numéricos
-- **Matplotlib** - Visualizações científicas
+- **Matplotlib** - Visualizações
 - **Pandas** - Manipulação de dados
 
-## 📈 **DESENVOLVIMENTO**
+## 🔗 **RELACIONADO**
 
-### **Cronograma:**
-1. **Protótipo** ✅ - Interface básica + cálculos fundamentais
-2. **Fase 1** ✅ - Cálculos avançados + perdas por atrito
-3. **Fase 2** ✅ - Visualizações avançadas + gráficos
-4. **Fase 3** ✅ - Exemplos práticos educacionais
-5. **Fase 4** ✅ - Funcionalidades profissionais
-6. **Fase 5** ✅ - Interface profissional completa
+Para o protótipo simplificado, consulte a pasta `../prototipo/` que contém:
+- Versão simplificada para demonstração
+- Funcionalidades básicas
+- Documentação de apresentação
 
-## 🔗 **NAVEGAÇÃO**
+## 📈 **CRONOGRAMA DE DESENVOLVIMENTO**
 
-- **`prototipo/`** - Para demonstração e aprovação do projeto
-- **`trabalho_completo/`** - Para uso educacional e profissional
-
-## 📞 **CONTATO**
-
-- **Desenvolvedor:** [Seu Nome]
-- **Email:** [seu.email@universidade.edu]
-- **GitHub:** [link-do-repositorio]
+| Fase | Status | Descrição |
+|------|--------|-----------|
+| **Protótipo** | ✅ Concluído | Interface básica + cálculos fundamentais |
+| **Fase 1** | ✅ Concluído | Cálculos avançados + perdas |
+| **Fase 2** | ✅ Concluído | Visualizações + gráficos |
+| **Fase 3** | ✅ Concluído | Exemplos práticos |
+| **Fase 4** | ✅ Concluído | Funcionalidades avançadas |
+| **Fase 5** | ✅ Concluído | Interface profissional |
 
 ---
 
-*Projeto desenvolvido para ensino de mecânica dos fluidos e instrumentação industrial.*
+*Este é o trabalho final completo, desenvolvido a partir do protótipo inicial.*
