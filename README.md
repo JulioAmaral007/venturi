@@ -93,13 +93,9 @@ trabalho_completo/
 - Calibração de instrumentos
 - Treinamento técnico de equipes
 
-## 📚 **DOCUMENTAÇÃO COMPLETA**
+## 📚 **DOCUMENTAÇÃO**
 
-- **`LEIAME_PRIMEIRO.md`** - Guia de início rápido
-- **`QUICK_START.md`** - Instruções de execução
-- **`GUIA_STREAMLIT.md`** - Guia completo do Streamlit
-- **`ESTRUTURA.md`** - Estrutura detalhada do projeto
-- **`Venturi.md`** - Documentação técnica do medidor
+Para fundamentação teórica sobre medidores de Venturi, consulte **`Venturi.md`** (documentação técnica completa).
 
 ## 🛠️ **TECNOLOGIAS UTILIZADAS**
 

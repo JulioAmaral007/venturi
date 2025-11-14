@@ -1,0 +1,526 @@
+\documentclass[12pt,a4paper]{article}
+
+% ============================================
+% PACOTES E CONFIGURAÇÕES
+% ============================================
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{hyperref}
+\usepackage{indentfirst}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+
+\geometry{a4paper,left=3cm,top=3cm,right=2cm,bottom=2cm}
+\onehalfspacing
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue}
+
+% ============================================
+% INFORMAÇÕES DO DOCUMENTO
+% ============================================
+\title{Guia de Estudos: Medidor de Venturi\\ Conteúdo e Fórmulas Fundamentais}
+\author{Baseado no Trabalho de Simulação}
+\date{\today}
+
+\begin{document}
+
+% ============================================
+% CAPA
+% ============================================
+\maketitle
+\thispagestyle{empty}
+
+\newpage
+
+% ============================================
+% SUMÁRIO
+% ============================================
+\tableofcontents
+\newpage
+
+% ============================================
+% CONTEÚDO PARA ESTUDAR
+% ============================================
+\section{Conteúdo para Estudar}
+
+\subsection{Conceitos Fundamentais de Mecânica dos Fluidos}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Escoamento Incompressível}
+    \begin{itemize}
+        \item Definição e condições de validade
+        \item Aplicação em medidores de vazão
+        \item Quando considerar compressibilidade
+    \end{itemize}
+    
+    \item \textbf{Regime Permanente}
+    \begin{itemize}
+        \item Características do escoamento permanente
+        \item Variação temporal das propriedades
+        \item Aplicação prática em medidores
+    \end{itemize}
+    
+    \item \textbf{Propriedades dos Fluidos}
+    \begin{itemize}
+        \item Densidade ($\rho$) e sua influência nos cálculos
+        \item Viscosidade e efeitos no escoamento
+        \item Propriedades de fluidos manométricos (mercúrio, água, etc.)
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Princípio de Funcionamento do Medidor de Venturi}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Geometria do Medidor}
+    \begin{itemize}
+        \item Seção de entrada (diâmetro $D_1$, área $A_1$)
+        \item Garganta (diâmetro $D_2$, área $A_2$)
+        \item Razão de diâmetros $\beta = D_2/D_1$
+        \item Faixa recomendada: $0,4 \leq \beta \leq 0,7$
+        \item Transições suaves (entrada e saída)
+    \end{itemize}
+    
+    \item \textbf{Princípio de Medição}
+    \begin{itemize}
+        \item Conversão de energia cinética em energia de pressão
+        \item Relação entre velocidade e pressão
+        \item Medição da diferença de pressão ($\Delta P$)
+        \item Medição do desnível manométrico ($\Delta h$)
+    \end{itemize}
+    
+    \item \textbf{Vantagens e Aplicações}
+    \begin{itemize}
+        \item Alta precisão
+        \item Baixa perda de carga permanente
+        \item Aplicações industriais
+        \item Calibração e certificação (ISO 5167-4)
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Equações Fundamentais}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Equação da Continuidade}
+    \begin{itemize}
+        \item Conservação de massa
+        \item Relação entre áreas e velocidades
+        \item Aplicação em diferentes seções
+    \end{itemize}
+    
+    \item \textbf{Equação de Bernoulli}
+    \begin{itemize}
+        \item Conservação de energia
+        \item Formas da equação (pressão, altura, velocidade)
+        \item Simplificações para medidor horizontal
+        \item Limitações e condições de validade
+    \end{itemize}
+    
+    \item \textbf{Perdas de Energia}
+    \begin{itemize}
+        \item Perdas por atrito
+        \item Equação de Darcy-Weisbach
+        \item Coeficiente de atrito ($f$)
+        \item Número de Reynolds e regime de escoamento
+    \end{itemize}
+    
+    \item \textbf{Coeficiente de Descarga}
+    \begin{itemize}
+        \item Definição e significado físico
+        \item Valores típicos ($0,95 \leq C_d \leq 0,99$)
+        \item Fatores que influenciam $C_d$
+        \item Importância da calibração
+        \item Sensibilidade do medidor ao $C_d$
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Medição e Instrumentação}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Manômetros Diferenciais}
+    \begin{itemize}
+        \item Manômetro em U
+        \item Princípio de funcionamento
+        \item Relação entre desnível e diferença de pressão
+        \item Fluidos manométricos (mercúrio, água colorida, etc.)
+    \end{itemize}
+    
+    \item \textbf{Conversão de Grandezas}
+    \begin{itemize}
+        \item De $\Delta P$ para $\Delta h$
+        \item De $\Delta h$ para $Q$
+        \item Unidades e conversões
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Análise e Validação}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Modos de Operação}
+    \begin{itemize}
+        \item Modo Ideal: $C_d = 1,0$, $h_L = 0$
+        \item Modo Realista: considera perdas e $C_d < 1$
+        \item Modo Medidor: cálculo de $Q$ a partir de $\Delta h$ medido
+    \end{itemize}
+    
+    \item \textbf{Análise de Sensibilidade}
+    \begin{itemize}
+        \item Efeito do coeficiente de descarga
+        \item Efeito da razão $\beta$
+        \item Propagação de erros
+        \item Importância da calibração
+    \end{itemize}
+    
+    \item \textbf{Validação de Resultados}
+    \begin{itemize}
+        \item Comparação com valores teóricos
+        \item Análise de erros
+        \item Verificação de consistência física
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Visualizações e Interpretação}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Diagramas Esquemáticos}
+    \begin{itemize}
+        \item Representação geométrica
+        \item Indicação de velocidades e pressões
+    \end{itemize}
+    
+    \item \textbf{Perfis de Pressão}
+    \begin{itemize}
+        \item Variação ao longo do tubo
+        \item Ponto de mínima pressão (garganta)
+    \end{itemize}
+    
+    \item \textbf{Linhas de Energia}
+    \begin{itemize}
+        \item Linha de energia total
+        \item Linha piezométrica
+        \item Perdas de carga
+    \end{itemize}
+    
+    \item \textbf{Curvas de Calibração}
+    \begin{itemize}
+        \item Relação $Q$ vs $\Delta h$
+        \item Comportamento quadrático
+    \end{itemize}
+\end{enumerate}
+
+% ============================================
+% FÓRMULAS PARA ESTUDAR
+% ============================================
+\section{Fórmulas para Estudar}
+
+\subsection{Equação da Continuidade}
+
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Equação da Continuidade]
+Para escoamento incompressível em regime permanente:
+\begin{equation}
+Q = A_1 v_1 = A_2 v_2
+\label{eq:continuidade_estudo}
+\end{equation}
+onde:
+\begin{itemize}
+    \item $Q$ = vazão volumétrica (\si{\meter\cubed\per\second})
+    \item $A_1, A_2$ = áreas das seções (\si{\meter\squared})
+    \item $v_1, v_2$ = velocidades nas seções (\si{\meter\per\second})
+\end{itemize}
+\end{tcolorbox}
+
+\textbf{Conceitos importantes:}
+\begin{itemize}
+    \item Conservação de massa em escoamento incompressível
+    \item Relação inversa entre área e velocidade
+    \item Aplicação em qualquer seção do medidor
+\end{itemize}
+
+\subsection{Equação de Bernoulli}
+
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Equação de Bernoulli (Medidor Horizontal)]
+Para medidor horizontal em regime permanente:
+\begin{equation}
+\frac{P_1}{\rho g} + \frac{v_1^2}{2g} = \frac{P_2}{\rho g} + \frac{v_2^2}{2g}
+\label{eq:bernoulli_estudo}
+\end{equation}
+ou na forma de pressão:
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2
+\end{equation}
+onde:
+\begin{itemize}
+    \item $P_1, P_2$ = pressões nas seções (\si{\pascal})
+    \item $\rho$ = densidade do fluido (\si{\kilogram\per\meter\cubed})
+    \item $g$ = aceleração da gravidade (\si{\meter\per\second\squared})
+    \item $v_1, v_2$ = velocidades (\si{\meter\per\second})
+\end{itemize}
+\end{tcolorbox}
+
+\textbf{Conceitos importantes:}
+\begin{itemize}
+    \item Conservação de energia mecânica
+    \item Troca entre energia de pressão e energia cinética
+    \item Válida para escoamento ideal (sem perdas)
+    \item Simplificação para medidor horizontal (sem termos de altura)
+\end{itemize}
+
+\subsection{Diferença de Pressão Ideal}
+
+\begin{tcolorbox}[colback=green!5!white,colframe=green!75!black,title=Queda de Pressão Ideal]
+Combinando continuidade e Bernoulli:
+\begin{equation}
+\Delta P = P_1 - P_2 = \frac{1}{2}\rho(v_2^2 - v_1^2)
+\label{eq:delta_p_ideal_estudo}
+\end{equation}
+Substituindo $v_2 = v_1(A_1/A_2)$:
+\begin{equation}
+\Delta P = \frac{1}{2}\rho v_1^2\left[\left(\frac{A_1}{A_2}\right)^2 - 1\right]
+\end{equation}
+ou em termos de razão de diâmetros $\beta = D_2/D_1$:
+\begin{equation}
+\Delta P = \frac{1}{2}\rho v_1^2\left(\frac{1}{\beta^4} - 1\right)
+\end{equation}
+\end{tcolorbox}
+
+\textbf{Conceitos importantes:}
+\begin{itemize}
+    \item Relação quadrática com velocidade
+    \item Dependência da razão de áreas ($\beta^4$)
+    \item Maior $\Delta P$ para menor $\beta$ (maior constrição)
+\end{itemize}
+
+\subsection{Medidor de Venturi Real}
+
+\begin{tcolorbox}[colback=red!5!white,colframe=red!75!black,title=Equação do Medidor de Venturi (Condições Reais)]
+Para condições reais, incluindo o coeficiente de descarga:
+\begin{equation}
+Q = C_d A_2 \sqrt{\frac{2\Delta P}{\rho(1 - \beta^4)}}
+\label{eq:venturi_real_estudo}
+\end{equation}
+onde:
+\begin{itemize}
+    \item $C_d$ = coeficiente de descarga (típico: $0,95 \leq C_d \leq 0,99$)
+    \item $\beta = D_2/D_1$ = razão de diâmetros
+    \item $\Delta P = P_1 - P_2$ = diferença de pressão (\si{\pascal})
+\end{itemize}
+\end{tcolorbox}
+
+\textbf{Conceitos importantes:}
+\begin{itemize}
+    \item $C_d$ corrige para perdas e efeitos reais
+    \item $C_d = 1$ corresponde ao caso ideal
+    \item Fator $(1 - \beta^4)$ vem da geometria do medidor
+    \item Alta sensibilidade ao valor de $C_d$
+\end{itemize}
+
+\subsection{Medidor com Manômetro Diferencial}
+
+\begin{tcolorbox}[colback=orange!5!white,colframe=orange!75!black,title=Relação Manométrica]
+Desnível manométrico relacionado à diferença de pressão:
+\begin{equation}
+\Delta h = \frac{\Delta P}{(\rho_m - \rho)g}
+\label{eq:manometro_estudo}
+\end{equation}
+onde:
+\begin{itemize}
+    \item $\Delta h$ = desnível no manômetro (\si{\meter})
+    \item $\rho_m$ = densidade do fluido manométrico (\si{\kilogram\per\meter\cubed})
+    \item $\rho$ = densidade do fluido em escoamento (\si{\kilogram\per\meter\cubed})
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=orange!5!white,colframe=orange!75!black,title=Equação do Venturi com Desnível Manométrico]
+Substituindo $\Delta P$ na equação do medidor:
+\begin{equation}
+Q = C_d A_2 \sqrt{\frac{2g \Delta h (\rho_m - \rho)}{\rho(1 - \beta^4)}}
+\label{eq:venturi_desnivel_estudo}
+\end{equation}
+\end{tcolorbox}
+
+\textbf{Conceitos importantes:}
+\begin{itemize}
+    \item Conversão direta de $\Delta h$ para $Q$
+    \item Dependência da diferença de densidades
+    \item Relação quadrática: $Q \propto \sqrt{\Delta h}$
+    \item Equação prática para medição
+\end{itemize}
+
+\subsection{Perdas de Carga}
+
+\begin{tcolorbox}[colback=purple!5!white,colframe=purple!75!black,title=Equação de Darcy-Weisbach]
+Perda de carga por atrito:
+\begin{equation}
+h_L = f \frac{L}{D} \frac{v^2}{2g}
+\label{eq:darcy_weisbach_estudo}
+\end{equation}
+onde:
+\begin{itemize}
+    \item $h_L$ = perda de carga (\si{\meter})
+    \item $f$ = coeficiente de atrito (adimensional)
+    \item $L$ = comprimento do trecho (\si{\meter})
+    \item $D$ = diâmetro hidráulico (\si{\meter})
+    \item $v$ = velocidade média (\si{\meter\per\second})
+\end{itemize}
+\end{tcolorbox}
+
+\textbf{Conceitos importantes:}
+\begin{itemize}
+    \item Perdas por atrito nas paredes
+    \item Coeficiente $f$ depende do número de Reynolds
+    \item Para tubos lisos: $f \approx 0,01 - 0,05$
+    \item Aumenta a diferença de pressão necessária
+\end{itemize}
+
+\subsection{Relações Geométricas}
+
+\begin{tcolorbox}[colback=cyan!5!white,colframe=cyan!75!black,title=Relações Geométricas Importantes]
+Área de seção circular:
+\begin{equation}
+A = \frac{\pi D^2}{4}
+\end{equation}
+
+Razão de diâmetros:
+\begin{equation}
+\beta = \frac{D_2}{D_1}
+\end{equation}
+
+Razão de áreas:
+\begin{equation}
+\frac{A_1}{A_2} = \left(\frac{D_1}{D_2}\right)^2 = \frac{1}{\beta^2}
+\end{equation}
+
+Relação entre velocidades:
+\begin{equation}
+\frac{v_2}{v_1} = \frac{A_1}{A_2} = \frac{1}{\beta^2}
+\end{equation}
+\end{tcolorbox}
+
+\subsection{Fórmulas de Cálculo Prático}
+
+\begin{tcolorbox}[colback=yellow!5!white,colframe=yellow!75!black,title=Sequência de Cálculo (Modo Ideal)]
+Dado $Q$ e geometria:
+\begin{enumerate}
+    \item Calcular áreas: $A_1 = \pi D_1^2/4$, $A_2 = \pi D_2^2/4$
+    \item Calcular velocidades: $v_1 = Q/A_1$, $v_2 = Q/A_2$
+    \item Calcular $\Delta P$: $\Delta P = \frac{1}{2}\rho(v_2^2 - v_1^2)$
+    \item Calcular $\Delta h$: $\Delta h = \Delta P / [(\rho_m - \rho)g]$
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=yellow!5!white,colframe=yellow!75!black,title=Sequência de Cálculo (Modo Medidor)]
+Dado $\Delta h$ e geometria:
+\begin{enumerate}
+    \item Calcular $\beta = D_2/D_1$
+    \item Calcular $A_2 = \pi D_2^2/4$
+    \item Calcular $Q$: $Q = C_d A_2 \sqrt{\frac{2g \Delta h (\rho_m - \rho)}{\rho(1 - \beta^4)}}$
+    \item Calcular $v_1 = Q/A_1$ e $v_2 = Q/A_2$
+    \item Calcular $\Delta P = (\rho_m - \rho)g \Delta h$
+\end{enumerate}
+\end{tcolorbox}
+
+% ============================================
+% EXEMPLOS DE APLICAÇÃO
+% ============================================
+\section{Exemplos de Aplicação das Fórmulas}
+
+\subsection{Exemplo 1: Cálculo de Vazão}
+
+\textbf{Dados:}
+\begin{itemize}
+    \item $D_1 = 0,10$ \si{\meter}
+    \item $D_2 = 0,05$ \si{\meter}
+    \item $\Delta h = 0,15$ \si{\meter}
+    \item $\rho = 1000$ \si{\kilogram\per\meter\cubed} (água)
+    \item $\rho_m = 13600$ \si{\kilogram\per\meter\cubed} (mercúrio)
+    \item $C_d = 0,98$
+\end{itemize}
+
+\textbf{Resolução:}
+\begin{align}
+\beta &= \frac{0,05}{0,10} = 0,5\\
+A_2 &= \frac{\pi \times 0,05^2}{4} = 0,001963 \si{\meter\squared}\\
+Q &= 0,98 \times 0,001963 \times \sqrt{\frac{2 \times 9,81 \times 0,15 \times (13600 - 1000)}{1000 \times (1 - 0,5^4)}}\\
+Q &= 0,0121 \si{\meter\cubed\per\second} = 12,1 \si{\liter\per\second}
+\end{align}
+
+\subsection{Exemplo 2: Cálculo de Desnível}
+
+\textbf{Dados:}
+\begin{itemize}
+    \item $D_1 = 0,10$ \si{\meter}
+    \item $D_2 = 0,05$ \si{\meter}
+    \item $Q = 0,015$ \si{\meter\cubed\per\second}
+    \item $\rho = 1000$ \si{\kilogram\per\meter\cubed}
+    \item $\rho_m = 13600$ \si{\kilogram\per\meter\cubed}
+    \item Modo ideal ($C_d = 1,0$)
+\end{itemize}
+
+\textbf{Resolução:}
+\begin{align}
+A_1 &= \frac{\pi \times 0,10^2}{4} = 0,007854 \si{\meter\squared}\\
+A_2 &= \frac{\pi \times 0,05^2}{4} = 0,001963 \si{\meter\squared}\\
+v_1 &= \frac{0,015}{0,007854} = 1,910 \si{\meter\per\second}\\
+v_2 &= \frac{0,015}{0,001963} = 7,641 \si{\meter\per\second}\\
+\Delta P &= \frac{1}{2} \times 1000 \times (7,641^2 - 1,910^2) = 27370 \si{\pascal}\\
+\Delta h &= \frac{27370}{(13600 - 1000) \times 9,81} = 0,221 \si{\meter} = 22,1 \si{\centi\meter}
+\end{align}
+
+% ============================================
+% DICAS DE ESTUDO
+% ============================================
+\section{Dicas de Estudo}
+
+\begin{enumerate}
+    \item \textbf{Entenda a física:} Não apenas memorize as fórmulas, mas compreenda o princípio físico por trás de cada equação.
+    
+    \item \textbf{Pratique a derivação:} Tente derivar as equações principais a partir dos princípios fundamentais (continuidade + Bernoulli).
+    
+    \item \textbf{Resolva exercícios:} Pratique com diferentes valores de parâmetros para entender a sensibilidade do medidor.
+    
+    \item \textbf{Analise unidades:} Sempre verifique as unidades ao resolver problemas. Isso ajuda a identificar erros.
+    
+    \item \textbf{Compare modos:} Entenda as diferenças entre modo ideal, realista e medidor.
+    
+    \item \textbf{Visualize:} Use diagramas para entender a geometria e o escoamento.
+    
+    \item \textbf{Estude a sensibilidade:} Compreenda como variações em $C_d$ e $\beta$ afetam os resultados.
+\end{enumerate}
+
+% ============================================
+% REFERÊNCIAS RÁPIDAS
+% ============================================
+\section{Referências Rápidas}
+
+\subsection{Valores Típicos}
+
+\begin{itemize}
+    \item Coeficiente de descarga: $0,95 \leq C_d \leq 0,99$
+    \item Razão de diâmetros recomendada: $0,4 \leq \beta \leq 0,7$
+    \item Densidade da água: $\rho_{\text{água}} = 1000$ \si{\kilogram\per\meter\cubed}
+    \item Densidade do mercúrio: $\rho_{\text{Hg}} = 13600$ \si{\kilogram\per\meter\cubed}
+    \item Aceleração da gravidade: $g = 9,81$ \si{\meter\per\second\squared}
+    \item Coeficiente de atrito (tubos lisos): $f \approx 0,01 - 0,05$
+\end{itemize}
+
+\subsection{Unidades Importantes}
+
+\begin{itemize}
+    \item Vazão: \si{\meter\cubed\per\second} ou \si{\liter\per\second}
+    \item Pressão: \si{\pascal} ou \si{\kilo\pascal} (1 \si{\kilo\pascal} = 1000 \si{\pascal})
+    \item Velocidade: \si{\meter\per\second}
+    \item Densidade: \si{\kilogram\per\meter\cubed}
+    \item Diâmetro/Comprimento: \si{\meter} ou \si{\centi\meter}
+\end{itemize}
+
+\end{document}
+
