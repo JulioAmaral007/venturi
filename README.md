@@ -50,7 +50,7 @@ trabalho_completo/
 - Geração de curva de calibração
 - Uso prático do medidor
 - Análise de sensibilidade ao Cd
-- Efeito da razão β = D₂/D₁
+- Análise de Número de Reynolds e regimes de escoamento
 
 ### ✅ **Funcionalidades Profissionais:**
 - Análise estatística dos resultados

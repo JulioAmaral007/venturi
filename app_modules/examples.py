@@ -18,7 +18,7 @@ def executar_exemplos():
             "2. Curva de Calibração",
             "3. Modo Medidor (Δh → Q)",
             "4. Sensibilidade ao Cd",
-            "5. Efeito da Razão Beta (β)"
+            "5. Análise de Número de Reynolds"
         ]
     )
     
@@ -34,7 +34,7 @@ def executar_exemplos():
     elif "4." in exemplo:
         exemplo_4_sensibilidade_cd()
     elif "5." in exemplo:
-        exemplo_5_efeito_beta()
+        exemplo_5_reynolds()
 
 
 def exemplo_1_comparacao_modos():
@@ -303,58 +303,208 @@ def exemplo_4_sensibilidade_cd():
     """, unsafe_allow_html=True)
 
 
-def exemplo_5_efeito_beta():
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📐 Exemplo 5: Efeito da Razão Beta (β = D₂/D₁)</div>', unsafe_allow_html=True)
+def exemplo_5_reynolds():
+    """Exemplo 5: Análise de Número de Reynolds e Regimes de Escoamento"""
+    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">🌊 Exemplo 5: Análise de Número de Reynolds</div>', unsafe_allow_html=True)
+    
     st.markdown("""
-    <div style=\"background: #eff6ff; color: #000000; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 8px; margin: 1rem 0;\">
-    Este exemplo analisa como a <strong>razão de diâmetros β</strong> afeta o desempenho do medidor.
-    β é a razão entre o diâmetro da garganta (D₂) e o diâmetro de entrada (D₁).
+    <div style="background: #eff6ff; color: #000000; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+    Este exemplo analisa o <strong>número de Reynolds</strong> e seus efeitos no comportamento do medidor de Venturi.
+    O número de Reynolds determina o regime de escoamento (laminar, transição ou turbulento) e influencia 
+    diretamente o coeficiente de descarga (Cd) e a precisão das medições.
     </div>
     """, unsafe_allow_html=True)
     
-    D1 = 0.10
-    Q = 0.015
-    beta_values = np.linspace(0.3, 0.7, 9)
-    resultados = []
-    for beta in beta_values:
-        D2 = beta * D1
-        sim = VenturiSimulator()
-        sim.calcular(D1, D2, 1.0, 1000, 13600, Q, 0, 0.02, 1.0, 'Ideal')
-        resultados.append({'β': beta, 'D₂ (cm)': D2 * 100, 'Δh (cm)': sim.delta_h * 100, 'ΔP (kPa)': sim.delta_P / 1000, 'v₂ (m/s)': sim.v2, 'v₂/v₁': sim.v2 / sim.v1})
+    # Parâmetros fixos
+    D1 = 0.10  # m
+    D2 = 0.05  # m
     
-    st.markdown(f"### 📋 Efeito de β (D₁={D1*100:.0f} cm, Q={Q*1000:.0f} L/s fixo)")
+    # Faixa de vazões para cobrir diferentes regimes
+    vazoes = np.linspace(0.001, 0.030, 30)  # m³/s
+    resultados = []
+    
+    with st.spinner('Calculando número de Reynolds para diferentes vazões...'):
+        for q in vazoes:
+            sim = VenturiSimulator()
+            sim.calcular(D1, D2, 1.0, 1000, 13600, q, 0, 0.02, 0.97, 'Realista')
+            Re = sim.calcular_reynolds()
+            
+            # Determinar regime
+            if Re < 2300:
+                regime = "Laminar"
+                cor_regime = "#f59e0b"
+            elif Re < 4000:
+                regime = "Transição"
+                cor_regime = "#2563eb"
+            else:
+                regime = "Turbulento"
+                cor_regime = "#10b981"
+            
+            # Cd aproximado baseado em Reynolds (simplificado)
+            if Re < 2000:
+                cd_estimado = 0.92
+            elif Re < 10000:
+                cd_estimado = 0.94 + (Re - 2000) / 8000 * 0.03
+            else:
+                cd_estimado = 0.97
+            
+            resultados.append({
+                'Q (L/s)': q * 1000,
+                'v₁ (m/s)': sim.v1,
+                'Re': Re,
+                'Regime': regime,
+                'Cd estimado': cd_estimado,
+                'Δh (cm)': sim.delta_h * 100
+            })
+    
     import pandas as pd
     df = pd.DataFrame(resultados)
-    st.dataframe(df.style.format({'β': '{:.2f}', 'D₂ (cm)': '{:.2f}', 'Δh (cm)': '{:.2f}', 'ΔP (kPa)': '{:.2f}', 'v₂ (m/s)': '{:.2f}', 'v₂/v₁': '{:.2f}'}), width='stretch')
     
+    # Estatísticas por regime
+    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 1.5rem 0 1rem 0; font-weight: 600;">📊 Distribuição dos Regimes de Escoamento</div>', unsafe_allow_html=True)
+    
+    laminar_count = len(df[df['Re'] < 2300])
+    transicao_count = len(df[(df['Re'] >= 2300) & (df['Re'] < 4000)])
+    turbulento_count = len(df[df['Re'] >= 4000])
+    
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total de Pontos", len(df))
+    with col2:
+        st.metric("Laminar (Re < 2300)", laminar_count, delta=None)
+    with col3:
+        st.metric("Transição (2300-4000)", transicao_count, delta=None)
+    with col4:
+        st.metric("Turbulento (Re > 4000)", turbulento_count, delta=None)
+    
+    # Tabela resumida
     st.markdown("---")
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📈 Visualizações do Efeito de β</div>', unsafe_allow_html=True)
+    st.markdown("### 📋 Tabela de Resultados (Amostra)")
+    
+    # Mostrar apenas alguns pontos representativos
+    indices_amostra = [0, len(df)//4, len(df)//2, 3*len(df)//4, len(df)-1]
+    df_amostra = df.iloc[indices_amostra].copy()
+    
+    styled_df = df_amostra.style.format({
+        'Q (L/s)': '{:.3f}',
+        'v₁ (m/s)': '{:.3f}',
+        'Re': '{:,.0f}',
+        'Cd estimado': '{:.3f}',
+        'Δh (cm)': '{:.2f}'
+    })
+    
+    st.dataframe(styled_df, width='stretch')
+    
+    # Gráficos
+    st.markdown("---")
+    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📈 Visualizações do Número de Reynolds</div>', unsafe_allow_html=True)
+    
     import matplotlib.pyplot as plt
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(14, 10))
+    
+    # Gráfico 1: Re vs Q
     ax1.set_facecolor('white')
-    ax1.plot(df['β'], df['Δh (cm)'], 'o-', color='#ef4444', linewidth=2.5, markersize=8, markeredgecolor='white', markeredgewidth=2)
-    ax1.set_xlabel('Razão β = D₂/D₁', fontsize=11, fontweight='bold', color='#000000')
-    ax1.set_ylabel('Desnível Δh (cm)', fontsize=11, fontweight='bold', color='#000000')
-    ax1.set_title('Desnível vs Razão Beta', fontsize=12, fontweight='bold', color='#000000', pad=15)
+    cores = ['#f59e0b' if r < 2300 else ('#2563eb' if r < 4000 else '#10b981') 
+             for r in df['Re']]
+    ax1.scatter(df['Q (L/s)'], df['Re'], c=cores, s=50, alpha=0.7, edgecolors='white', linewidth=1)
+    ax1.axhline(y=2300, color='#f59e0b', linestyle='--', linewidth=2, label='Re = 2300 (Laminar/Turbulento)')
+    ax1.axhline(y=4000, color='#2563eb', linestyle='--', linewidth=2, label='Re = 4000 (Transição/Turbulento)')
+    ax1.axhline(y=10000, color='#10b981', linestyle=':', linewidth=1.5, label='Re = 10⁴ (Recomendado mínimo)')
+    ax1.set_xlabel('Vazão Q (L/s)', fontsize=11, fontweight='bold', color='#000000')
+    ax1.set_ylabel('Número de Reynolds', fontsize=11, fontweight='bold', color='#000000')
+    ax1.set_title('Número de Reynolds vs Vazão', fontsize=12, fontweight='bold', color='#000000', pad=15)
     ax1.grid(True, alpha=0.2, linestyle='--', linewidth=1)
-    ax1.axvspan(0.4, 0.7, alpha=0.2, color='#10b981', label='Faixa típica')
-    ax1.legend(frameon=True, fancybox=True, shadow=True)
+    ax1.legend(frameon=True, fancybox=True, shadow=True, fontsize=9)
     ax1.spines['top'].set_visible(False)
     ax1.spines['right'].set_visible(False)
+    
+    # Gráfico 2: Re vs v₁
     ax2.set_facecolor('white')
-    ax2.plot(df['β'], df['v₂ (m/s)'], 'o-', color='#2563eb', linewidth=2.5, markersize=8, markeredgecolor='white', markeredgewidth=2)
-    ax2.set_xlabel('Razão β = D₂/D₁', fontsize=11, fontweight='bold', color='#000000')
-    ax2.set_ylabel('Velocidade na garganta v₂ (m/s)', fontsize=11, fontweight='bold', color='#000000')
-    ax2.set_title('Velocidade vs Razão Beta', fontsize=12, fontweight='bold', color='#000000', pad=15)
+    ax2.scatter(df['v₁ (m/s)'], df['Re'], c=cores, s=50, alpha=0.7, edgecolors='white', linewidth=1)
+    ax2.axhline(y=2300, color='#f59e0b', linestyle='--', linewidth=2)
+    ax2.axhline(y=4000, color='#2563eb', linestyle='--', linewidth=2)
+    ax2.axhline(y=10000, color='#10b981', linestyle=':', linewidth=1.5)
+    ax2.set_xlabel('Velocidade v₁ (m/s)', fontsize=11, fontweight='bold', color='#000000')
+    ax2.set_ylabel('Número de Reynolds', fontsize=11, fontweight='bold', color='#000000')
+    ax2.set_title('Número de Reynolds vs Velocidade', fontsize=12, fontweight='bold', color='#000000', pad=15)
     ax2.grid(True, alpha=0.2, linestyle='--', linewidth=1)
-    ax2.axvspan(0.4, 0.7, alpha=0.2, color='#10b981', label='Faixa típica')
-    ax2.legend(frameon=True, fancybox=True, shadow=True)
     ax2.spines['top'].set_visible(False)
     ax2.spines['right'].set_visible(False)
+    
+    # Gráfico 3: Cd estimado vs Re
+    ax3.set_facecolor('white')
+    ax3.plot(df['Re'], df['Cd estimado'], 'o-', color='#8b5cf6', linewidth=2, markersize=5, alpha=0.7)
+    ax3.axvline(x=2300, color='#f59e0b', linestyle='--', linewidth=1.5, alpha=0.5)
+    ax3.axvline(x=4000, color='#2563eb', linestyle='--', linewidth=1.5, alpha=0.5)
+    ax3.axvline(x=10000, color='#10b981', linestyle=':', linewidth=1.5, alpha=0.7)
+    ax3.set_xlabel('Número de Reynolds', fontsize=11, fontweight='bold', color='#000000')
+    ax3.set_ylabel('Coeficiente de Descarga (Cd)', fontsize=11, fontweight='bold', color='#000000')
+    ax3.set_title('Cd Estimado vs Número de Reynolds', fontsize=12, fontweight='bold', color='#000000', pad=15)
+    ax3.grid(True, alpha=0.2, linestyle='--', linewidth=1)
+    ax3.set_ylim([0.90, 1.00])
+    ax3.spines['top'].set_visible(False)
+    ax3.spines['right'].set_visible(False)
+    
+    # Gráfico 4: Distribuição de regimes
+    ax4.set_facecolor('white')
+    regimes_count = [laminar_count, transicao_count, turbulento_count]
+    labels = ['Laminar\n(Re < 2300)', 'Transição\n(2300-4000)', 'Turbulento\n(Re > 4000)']
+    cores_barras = ['#f59e0b', '#2563eb', '#10b981']
+    bars = ax4.bar(labels, regimes_count, color=cores_barras, alpha=0.7, edgecolor='white', linewidth=2)
+    ax4.set_ylabel('Número de Pontos', fontsize=11, fontweight='bold', color='#000000')
+    ax4.set_title('Distribuição dos Regimes de Escoamento', fontsize=12, fontweight='bold', color='#000000', pad=15)
+    ax4.grid(True, alpha=0.2, linestyle='--', linewidth=1, axis='y')
+    for i, (bar, count) in enumerate(zip(bars, regimes_count)):
+        ax4.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, 
+                str(count), ha='center', va='bottom', fontweight='bold', fontsize=11)
+    ax4.spines['top'].set_visible(False)
+    ax4.spines['right'].set_visible(False)
     
     plt.tight_layout()
     st.pyplot(fig)
     plt.close(fig)
+    
+    # Análise e conclusões
+    st.markdown("---")
+    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📊 Análise e Conclusões</div>', unsafe_allow_html=True)
+    
+    re_min = df['Re'].min()
+    re_max = df['Re'].max()
+    re_medio = df['Re'].mean()
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Re Mínimo", f"{re_min:,.0f}")
+    with col2:
+        st.metric("Re Médio", f"{re_medio:,.0f}")
+    with col3:
+        st.metric("Re Máximo", f"{re_max:,.0f}")
+    
+    st.markdown("""
+    <div style="background: #eff6ff; color: #000000; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+    <strong>Observações Importantes:</strong><br><br>
+    
+    • <strong>Regime Laminar (Re < 2300):</strong><br>
+      &nbsp;&nbsp;⚠️ Baixas vazões resultam em escoamento laminar<br>
+      &nbsp;&nbsp;⚠️ Cd menor e menos estável<br>
+      &nbsp;&nbsp;⚠️ Não recomendado para medidores de vazão<br><br>
+    
+    • <strong>Regime de Transição (2300 < Re < 4000):</strong><br>
+      &nbsp;&nbsp;🔄 Comportamento instável e imprevisível<br>
+      &nbsp;&nbsp;🔄 Cd varia significativamente<br>
+      &nbsp;&nbsp;🔄 Evitar esta faixa em aplicações práticas<br><br>
+    
+    • <strong>Regime Turbulento (Re > 4000):</strong><br>
+      &nbsp;&nbsp;✅ Comportamento estável e previsível<br>
+      &nbsp;&nbsp;✅ Cd mais alto e constante<br>
+      &nbsp;&nbsp;✅ Recomendado para medidores de vazão<br><br>
+    
+    • <strong>Recomendação ISO 5167:</strong> Re > 2×10⁴ para medidores calibrados<br>
+    • <strong>Prática Industrial:</strong> Re > 10⁴ é geralmente desejável<br>
+    • <strong>Cd aumenta com Re</strong> até estabilizar para Re > 10⁵
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def plt_close(fig):
