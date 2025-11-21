@@ -493,75 +493,120 @@ def exemplo_5_efeito_beta():
 # ========== INTERFACE STREAMLIT ==========
 
 def main():
-    # Sidebar com controles
+    # Melhorado: destaque inicial na sidebar com instruções rápidas
     st.sidebar.header("⚙️ Parâmetros de Controle")
-    
-    # Seletor de modo (Simulação ou Exemplos)
-    st.sidebar.subheader("🎯 Modo de Operação")
-    app_mode = st.sidebar.radio(
-        "Escolha o modo:",
-        options=['Simulação Interativa', 'Exemplos Práticos'],
-        help="Simulação: configure parâmetros manualmente | Exemplos: veja casos pré-configurados"
+    st.sidebar.info(
+        "Preencha os dados na ordem sugerida para gerar resultados mais consistentes.",
+        icon="🧭"
     )
+    
+    # Melhorado: container dedicado para modo de operação com texto contextual
+    with st.sidebar.container():
+        st.sidebar.subheader("🎯 Modo de Operação")
+        app_mode = st.sidebar.radio(
+            "Escolha como deseja explorar o simulador:",
+            options=['Simulação Interativa', 'Exemplos Práticos'],
+            help="Simulação Interativa: configure manualmente | Exemplos Práticos: use cenários guiados"
+        )
     
     # Se modo Exemplos foi selecionado
     if app_mode == 'Exemplos Práticos':
         executar_exemplos()
         return
     
-    # Título principal (apenas no modo Simulação Interativa)
-    st.markdown("""
-    <div style="background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%); padding: 2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-        <h1 style="color: white; margin: 0; font-size: 2rem; font-weight: 700;">🔬 Simulador Interativo de Medidor de Venturi</h1>
-        <p style="color: rgba(255, 255, 0, 1); margin: 0.5rem 0 0 0; font-size: 1.1rem;">Ferramenta avançada para análise de escoamento em medidores de Venturi</p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Melhorado: cabeçalho nativo do Streamlit com hierarquia clara
+    st.title("🔬 Simulador Interativo de Medidor de Venturi")
+    st.caption("Configure os parâmetros, visualize o comportamento hidráulico e compare modos de operação.")
+    st.write("")
 
-    # Continuar com simulação interativa
-    mode = st.sidebar.radio(
-        "Tipo de simulação:",
-        options=['Ideal', 'Realista', 'Medidor'],
-        help="Ideal: sem perdas | Realista: com perdas | Medidor: calcula Q a partir de Δh"
-    )
+    # Melhorado: agrupamento do modo de simulação em container dedicado
+    with st.sidebar.container():
+        st.sidebar.subheader("⚗️ Tipo de Simulação")
+        mode = st.sidebar.radio(
+            "Selecione o cenário:",
+            options=['Ideal', 'Realista', 'Medidor'],
+            help="Ideal: sem perdas | Realista: com perdas | Medidor: calcula Q a partir de Δh"
+        )
     
     st.sidebar.markdown("---")
     
-    # Parâmetros geométricos
-    st.sidebar.subheader("📐 Geometria")
-    D1 = st.sidebar.slider("D₁ - Diâmetro de entrada (m)", 0.05, 0.30, 0.10, 0.01)
-    D2 = st.sidebar.slider("D₂ - Diâmetro da garganta (m)", 0.02, 0.15, 0.05, 0.01)
-    L = st.sidebar.slider("L - Comprimento total (m)", 0.5, 3.0, 1.0, 0.1)
+    # Melhorado: agrupamento lógico com container e tooltips para geometria
+    with st.sidebar.container():
+        st.sidebar.subheader("📐 Geometria do Venturi")
+        D1 = st.sidebar.slider(
+            "D₁ - Diâmetro de entrada (m)",
+            0.05, 0.30, 0.10, 0.01,
+            help="Defina o diâmetro do trecho de entrada do Venturi."
+        )
+        D2 = st.sidebar.slider(
+            "D₂ - Diâmetro da garganta (m)",
+            0.02, 0.15, 0.05, 0.01,
+            help="A garganta precisa ser menor para acelerar o escoamento."
+        )
+        L = st.sidebar.slider(
+            "L - Comprimento total (m)",
+            0.5, 3.0, 1.0, 0.1,
+            help="Comprimento total do equipamento considerado na análise."
+        )
     
     st.sidebar.markdown("---")
     
-    # Propriedades dos fluidos
-    st.sidebar.subheader("💧 Propriedades dos Fluidos")
-    rho = st.sidebar.slider("ρ - Densidade do fluido (kg/m³)", 500, 2000, 1000, 50)
-    rho_m = st.sidebar.slider("ρₘ - Densidade manométrica (kg/m³)", 10000, 15000, 13600, 100)
+    # Melhorado: uso de expander para propriedades, reduzindo poluição visual
+    with st.sidebar.expander("💧 Propriedades dos Fluidos", expanded=True):
+        rho = st.slider(
+            "ρ - Densidade do fluido (kg/m³)",
+            500, 2000, 1000, 50,
+            help="Adote o valor correspondente ao seu fluido principal."
+        )
+        rho_m = st.slider(
+            "ρₘ - Densidade do fluido manométrico (kg/m³)",
+            10000, 15000, 13600, 100,
+            help="Use 13600 kg/m³ para mercúrio ou ajuste conforme o manômetro."
+        )
     
     st.sidebar.markdown("---")
     
-    # Condições de escoamento
-    st.sidebar.subheader("🌊 Condições de Escoamento")
-    
-    if mode == 'Medidor':
-        delta_h = st.sidebar.slider("Δh - Desnível manométrico (m)", 0.01, 0.5, 0.1, 0.01)
-        Q = None  # Será calculado
-    else:
-        Q = st.sidebar.slider("Q - Vazão volumétrica (m³/s)", 0.001, 0.05, 0.01, 0.001)
-        delta_h = None  # Será calculado
+    # Melhorado: container com instruções dinâmicas para condições de escoamento
+    with st.sidebar.container():
+        st.sidebar.subheader("🌊 Condições de Escoamento")
+        if mode == 'Medidor':
+            st.sidebar.caption("Informe o desnível observado no manômetro para estimar a vazão.")
+            delta_h = st.sidebar.slider(
+                "Δh - Desnível manométrico (m)",
+                0.01, 0.5, 0.1, 0.01,
+                help="Valor medido diretamente no manômetro diferencial."
+            )
+            Q = None  # Será calculado
+        else:
+            st.sidebar.caption("Informe a vazão desejada para que o simulador calcule o desnível.")
+            Q = st.sidebar.slider(
+                "Q - Vazão volumétrica (m³/s)",
+                0.001, 0.05, 0.01, 0.001,
+                help="Ajuste conforme o regime de operação que deseja analisar."
+            )
+            delta_h = None  # Será calculado
     
     st.sidebar.markdown("---")
     
-    # Parâmetros avançados
-    st.sidebar.subheader("🔧 Parâmetros Avançados")
-    f = st.sidebar.slider("f - Coeficiente de atrito", 0.01, 0.10, 0.02, 0.005)
-    Cd = st.sidebar.slider("Cd - Coeficiente de descarga", 0.90, 1.00, 0.98, 0.01)
+    # Melhorado: expander para parâmetros avançados com dica sobre seu impacto
+    with st.sidebar.expander("🔧 Ajustes Finos", expanded=False):
+        st.caption("Use apenas se quiser avaliar perdas e calibração com mais detalhe.")
+        f = st.slider(
+            "f - Coeficiente de atrito",
+            0.01, 0.10, 0.02, 0.005,
+            help="Relaciona-se às perdas distribuídas no tubo."
+        )
+        Cd = st.slider(
+            "Cd - Coeficiente de descarga",
+            0.90, 1.00, 0.98, 0.01,
+            help="Coeficiente experimental que ajusta a vazão real."
+        )
     
     # Validação
     if D2 >= D1:
-        st.error("⚠️ ERRO: D₂ deve ser menor que D₁!")
-        return
+        # Melhorado: mensagem clara com instrução para corrigir o input
+        st.error("⚠️ Ajuste necessário: D₂ precisa ser menor que D₁ para garantir aceleração do escoamento.")
+        st.stop()
     
     # Criar simulador e calcular
     sim = VenturiSimulator()
@@ -569,56 +614,67 @@ def main():
     
     # ========== LAYOUT PRINCIPAL ==========
     
-    # Métricas principais
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📊 Resultados Principais</div>', unsafe_allow_html=True)
+    # Melhorado: container resume resultados com subtítulo e orientação de leitura
+    resumo_container = st.container()
+    with resumo_container:
+        st.header("📊 Resumo Instantâneo")
+        st.caption("Confira os valores principais antes de explorar os gráficos.")
+        st.write("")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Vazão Q", f"{sim.Q*1000:.2f} L/s", f"{sim.Q*3600:.1f} m³/h")
+        with col2:
+            st.metric("Desnível Δh", f"{sim.delta_h*100:.2f} cm", f"{sim.delta_h:.4f} m")
+        with col3:
+            st.metric("Velocidade v₁", f"{sim.v1:.3f} m/s")
+        with col4:
+            st.metric("Velocidade v₂", f"{sim.v2:.3f} m/s")
     
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("Vazão Q", f"{sim.Q*1000:.2f} L/s", f"{sim.Q*3600:.1f} m³/h")
-    
-    with col2:
-        st.metric("Desnível Δh", f"{sim.delta_h*100:.2f} cm", f"{sim.delta_h:.4f} m")
-    
-    with col3:
-        st.metric("Velocidade v₁", f"{sim.v1:.3f} m/s")
-    
-    with col4:
-        st.metric("Velocidade v₂", f"{sim.v2:.3f} m/s")
-    
+    st.write("")
     st.markdown("---")
+    st.write("")
     
     # Abas para organizar visualizações
+    # Melhorado: guia rápido para o usuário entender o conteúdo das abas
+    st.subheader("Visualize o comportamento do escoamento")
+    st.caption("Explore diagramas, manômetros e curvas de energia em abas organizadas.")
+    st.write("")
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📐 Diagrama", "🔬 Manômetro", "📈 Pressão", "⚡ Energia", "📋 Resultados Completos"
     ])
     
     with tab1:
+        # Melhorado: descrição breve do que observar no gráfico
         st.subheader("Diagrama Esquemático do Venturi")
+        st.info("Observe a geometria e a distribuição dos diâmetros definidos na barra lateral.", icon="📌")
         fig = plotar_diagrama_venturi(sim)
         st.pyplot(fig)
         plt.close(fig)
     
     with tab2:
         st.subheader("Manômetro Diferencial em U")
+        st.info("Visualize o desnível Δh e relacione com o modo escolhido.", icon="🧪")
         fig = plotar_manometro(sim)
         st.pyplot(fig)
         plt.close(fig)
     
     with tab3:
         st.subheader("Perfil de Pressão ao Longo do Tubo")
+        st.info("O perfil mostra como a pressão varia entre P₁ e P₂ conforme a seção se estreita.", icon="🧵")
         fig = plotar_perfil_pressao(sim)
         st.pyplot(fig)
         plt.close(fig)
     
     with tab4:
         st.subheader("Linhas de Energia e Piezométrica")
+        st.info("Compare energia disponível e perdas ao longo do Venturi.", icon="⚡")
         fig = plotar_linhas_energia(sim)
         st.pyplot(fig)
         plt.close(fig)
     
     with tab5:
         st.subheader("Resultados Numéricos Completos")
+        st.caption("Detalhe completo das propriedades calculadas. Use para relatórios ou calibrações.")
         
         Re = sim.calcular_reynolds()
         
@@ -663,20 +719,18 @@ def main():
         
         # Indicador de regime
         st.markdown("---")
+        # Melhorado: feedback contextual usando componentes nativos
         if Re < 2300:
-            st.markdown('<div style="background: #fffbeb; color: #000000; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 8px; margin: 1rem 0;">⚠️ <strong>Regime LAMINAR</strong> (Re < 2300)</div>', unsafe_allow_html=True)
+            st.warning("Regime LAMINAR (Re < 2300): medições tendem a ser menos sensíveis.", icon="⚠️")
         elif Re < 4000:
-            st.markdown('<div style="background: #eff6ff; color: #000000; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">🔄 <strong>Regime de TRANSIÇÃO</strong> (2300 < Re < 4000)</div>', unsafe_allow_html=True)
+            st.info("Regime de TRANSIÇÃO (2300 < Re < 4000): condições intermediárias, atenção aos parâmetros.", icon="🔄")
         else:
-            st.markdown('<div style="background: #f0fdf4; color: #000000; border-left: 4px solid #10b981; padding: 1rem; border-radius: 8px; margin: 1rem 0;">✅ <strong>Regime TURBULENTO</strong> (Re > 4000)</div>', unsafe_allow_html=True)
+            st.success("Regime TURBULENTO (Re > 4000): operação típica para Venturi industriais.", icon="✅")
     
-    # Rodapé
-    st.markdown("""
-    <div style="text-align: center; padding: 2rem; color: #64748b; border-top: 1px solid #e2e8f0; margin-top: 3rem;">
-        <p><strong>🔬 Simulador de Medidor de Venturi</strong></p>
-        <p>Desenvolvido com Streamlit + Python | Modo: {}</p>
-    </div>
-    """.format(mode), unsafe_allow_html=True)
+    # Melhorado: rodapé nativo e resumido
+    st.write("")
+    st.divider()
+    st.caption(f"🔬 Simulador de Medidor de Venturi • Modo atual: {mode}")
 
 
 if __name__ == "__main__":

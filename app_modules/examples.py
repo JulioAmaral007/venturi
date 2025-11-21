@@ -6,24 +6,35 @@ from .plots import plotar_perfil_pressao, plotar_linhas_energia
 
 def executar_exemplos():
     """Interface para executar os exemplos práticos do simulador."""
-    st.markdown('<div style="background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%); padding: 2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"><h1 style="color: white; margin: 0; font-size: 2rem; font-weight: 700;">📚 Exemplos Práticos</h1><p style="color: rgba(255, 255, 0, 1); margin: 0.5rem 0 0 0; font-size: 1.1rem;">Explore diferentes casos de uso do medidor de Venturi através de exemplos pré-configurados</p></div>', unsafe_allow_html=True)
+    # Melhorado: cabeçalho nativo com hierarquia visual clara
+    st.title("📚 Exemplos Práticos")
+    st.caption("Explore cenários guiados para entender diferentes comportamentos do medidor de Venturi.")
+    st.write("")
+    st.info(
+        "Selecione um exemplo na barra lateral para carregar um caso completo com explicações, gráficos e insights.",
+        icon="🧪"
+    )
+    st.markdown("---")
     
+    # Melhorado: sidebar orientada com ajuda contextual
     st.sidebar.markdown("---")
-    st.sidebar.subheader("📋 Selecione o Exemplo")
-    
+    st.sidebar.header("📋 Selecione o Exemplo")
     exemplo = st.sidebar.selectbox(
-        "Escolha um exemplo:",
+        "Escolha um cenário de estudo:",
         [
             "1. Comparação: Ideal vs Realista",
             "2. Curva de Calibração",
             "3. Modo Medidor (Δh → Q)",
             "4. Sensibilidade ao Cd",
             "5. Análise de Número de Reynolds"
-        ]
+        ],
+        help="Cada opção destaca um aspecto específico do Venturi: perdas, calibração, medição, Cd ou regime de escoamento."
     )
-    
     st.sidebar.markdown("---")
-    st.sidebar.info("💡 **Dica:** Cada exemplo demonstra um aspecto importante do funcionamento do medidor de Venturi.")
+    st.sidebar.info(
+        "💡 Dica: Use os exemplos como referência rápida antes de realizar suas próprias simulações.",
+        icon="📎"
+    )
     
     if "1." in exemplo:
         exemplo_1_comparacao_modos()
@@ -38,14 +49,18 @@ def executar_exemplos():
 
 
 def exemplo_1_comparacao_modos():
-    st.markdown('<div style="color: white; padding: 1rem 1.5rem; margin: 0; font-weight: 600;">🔵🔴 Exemplo 1: Comparação Modo Ideal vs Modo Realista</div>', unsafe_allow_html=True)
-    st.markdown("""
-    <div style="background: #eff6ff; color: #000000; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-    Este exemplo compara o comportamento do medidor de Venturi em duas condições:<br>
-    • <strong>Modo Ideal</strong>: Escoamento sem perdas (Cd = 1.0, sem atrito)<br>
-    • <strong>Modo Realista</strong>: Escoamento com perdas por atrito e coeficiente de descarga real
-    </div>
-    """, unsafe_allow_html=True)
+    # Melhorado: cabeçalho nativo e explicação direta
+    st.header("🔵🔴 Exemplo 1 · Comparação Ideal vs Realista")
+    st.caption("Compare rapidamente como perdas e coeficiente de descarga influenciam o Venturi.")
+    st.write("")
+    st.info(
+        "O modo Ideal considera Cd=1 e nenhuma perda por atrito. Já o modo Realista aplica Cd=0.96 e atrito f=0.025.",
+        icon="📋"
+    )
+    with st.expander("Parâmetros utilizados"):
+        st.write("• D₁ = 0,10 m | D₂ = 0,05 m | Q = 0,015 m³/s")
+        st.write("• ρ = 1000 kg/m³ | ρₘ = 13600 kg/m³ | L = 1,0 m")
+        st.write("• Ideal: f = 0,020 | Cd = 1,00 · Realista: f = 0,025 | Cd = 0,96")
     
     D1 = 0.10
     D2 = 0.05
@@ -73,8 +88,8 @@ def exemplo_1_comparacao_modos():
         st.metric("Desnível Δh", f"{sim_real.delta_h*100:.2f} cm")
         st.metric("Perda de Carga hₗ", f"{sim_real.h_L:.6f} m", "com perdas")
     
-    st.markdown("---")
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📊 Análise das Diferenças</div>', unsafe_allow_html=True)
+    st.divider()
+    st.subheader("📊 Análise das Diferenças")
     
     diff_p = ((sim_real.delta_P - sim_ideal.delta_P) / sim_ideal.delta_P) * 100
     diff_h = ((sim_real.delta_h - sim_ideal.delta_h) / sim_ideal.delta_h) * 100
@@ -86,8 +101,8 @@ def exemplo_1_comparacao_modos():
     with col3:
         st.metric("Perda de Energia", f"{sim_real.h_L:.6f} m")
     
-    st.markdown("---")
-    st.markdown("### 📈 Visualizações Comparativas")
+    st.write("")
+    st.subheader("📈 Visualizações Comparativas")
     tab1, tab2 = st.tabs(["Perfil de Pressão", "Linhas de Energia"])
     with tab1:
         fig = plotar_perfil_pressao(sim_real)
@@ -97,16 +112,21 @@ def exemplo_1_comparacao_modos():
         fig = plotar_linhas_energia(sim_real)
         st.pyplot(fig)
         plt_close(fig)
+    st.success("Conclusão: perdas elevam ΔP e Δh, reduzindo a energia disponível no modo realista.", icon="✅")
 
 
 def exemplo_2_curva_calibracao():
-    st.markdown('<div style="color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📈 Exemplo 2: Curva de Calibração do Medidor</div>', unsafe_allow_html=True)
-    st.markdown("""
-    <div style="background: #eff6ff; color: #000000; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-    Este exemplo gera uma <strong>curva de calibração</strong> relacionando a vazão volumétrica (Q) 
-    com o desnível manométrico (Δh) para um medidor de Venturi específico.
-    </div>
-    """, unsafe_allow_html=True)
+    # Melhorado: apresentação textual padronizada e orientativa
+    st.header("📈 Exemplo 2 · Curva de Calibração")
+    st.caption("Gera automaticamente a curva Q × Δh para um Venturi específico.")
+    st.write("")
+    st.info(
+        "A curva auxilia na leitura rápida do manômetro para estimar a vazão sem precisar recalcular tudo.",
+        icon="🧮"
+    )
+    with st.expander("Configuração considerada"):
+        st.write("• D₁ = 0,10 m | D₂ = 0,05 m | Cd = 0,97 | f = 0,02")
+        st.write("• Vazão de 0,005 a 0,030 m³/s · 20 pontos distribuídos uniformemente")
     
     sim = VenturiSimulator()
     vazoes = np.linspace(0.005, 0.030, 20)
@@ -120,7 +140,7 @@ def exemplo_2_curva_calibracao():
             pressoes.append(sim.delta_P / 1000)
             reynolds.append(sim.calcular_reynolds())
     
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📊 Resumo da Calibração</div>', unsafe_allow_html=True)
+    st.subheader("📊 Resumo da Calibração")
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("Faixa de Vazão", f"{vazoes[0]*1000:.1f} - {vazoes[-1]*1000:.1f} L/s")
@@ -145,8 +165,8 @@ def exemplo_2_curva_calibracao():
         'Reynolds': '{:,.0f}'
     }), width='stretch')
     
-    st.markdown("---")
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📈 Curva de Calibração</div>', unsafe_allow_html=True)
+    st.divider()
+    st.subheader("📈 Curva de Calibração")
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(10, 6), facecolor='white')
     ax.set_facecolor('white')
@@ -162,17 +182,21 @@ def exemplo_2_curva_calibracao():
     plt.tight_layout()
     st.pyplot(fig)
     plt.close(fig)
-    st.markdown('<div style="background: #f0fdf4; color: #000000; border-left: 4px solid #10b981; padding: 1rem; border-radius: 8px; margin: 1rem 0;">✅ A curva mostra a relação quadrática entre vazão e desnível: <strong>Q ∝ √(Δh)</strong></div>', unsafe_allow_html=True)
+    st.success("A curva reforça que a vazão é proporcional à raiz quadrada do desnível (Q ∝ √Δh).", icon="✅")
 
 
 def exemplo_3_modo_medidor():
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">🔬 Exemplo 3: Modo Medidor - Calcular Vazão a partir de Δh</div>', unsafe_allow_html=True)
-    st.markdown("""
-    <div style="background: #eff6ff; color: #000000; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-    Este exemplo demonstra o uso <strong>prático</strong> do medidor de Venturi: 
-    medir o desnível manométrico (Δh) e calcular a vazão (Q) correspondente.
-    </div>
-    """, unsafe_allow_html=True)
+    # Melhorado: contexto rápido para quem usa o Venturi como instrumento
+    st.header("🔬 Exemplo 3 · Modo Medidor (Δh → Q)")
+    st.caption("Converta leituras de Δh em vazão e visualize a relação Q x √Δh.")
+    st.write("")
+    st.info(
+        "Ideal para calibração em campo: escolha o Δh medido e confira instantaneamente a vazão correspondente.",
+        icon="🧷"
+    )
+    with st.expander("Condições adotadas"):
+        st.write("• D₁ = 0,10 m | D₂ = 0,05 m | Cd = 0,98 | f = 0,02")
+        st.write("• Δh varia de 5 a 25 cm (incrementos de 5 cm)")
     
     sim = VenturiSimulator()
     desniveis = [0.05, 0.10, 0.15, 0.20, 0.25]
@@ -190,6 +214,7 @@ def exemplo_3_modo_medidor():
     
     import pandas as pd
     df = pd.DataFrame(resultados)
+    st.subheader("📋 Resultados para Diferentes Desníveis")
     st.dataframe(df.style.format({
         'Δh (cm)': '{:.1f}',
         'Q (L/s)': '{:.2f}',
@@ -199,8 +224,8 @@ def exemplo_3_modo_medidor():
         'ΔP (kPa)': '{:.3f}'
     }), width='stretch')
     
-    st.markdown("---")
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📈 Relação Q = f(√Δh)</div>', unsafe_allow_html=True)
+    st.divider()
+    st.subheader("📈 Relação Q = f(√Δh)")
     import matplotlib.pyplot as plt
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
     ax1.set_facecolor('white')
@@ -223,24 +248,23 @@ def exemplo_3_modo_medidor():
     st.pyplot(fig)
     plt.close(fig)
     
-    st.markdown("""
-    <div style="background: #eff6ff; color: #000000; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-    💡 <strong>Observação Importante:</strong><br>
-    • A vazão é proporcional à raiz quadrada do desnível: <strong>Q ∝ √(Δh)</strong><br>
-    • Dobrando Δh, a vazão aumenta por um fator de √2 ≈ 1.41<br>
-    • O gráfico Q vs √(Δh) é aproximadamente linear
-    </div>
-    """, unsafe_allow_html=True)
+    st.info(
+        "Resumo: Q ∝ √Δh · Duplicar o desnível aumenta a vazão por √2 (~1,41) · O gráfico Q vs √Δh é quase linear.",
+        icon="💡"
+    )
 
 
 def exemplo_4_sensibilidade_cd():
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">⚙️ Exemplo 4: Sensibilidade ao Coeficiente de Descarga (Cd)</div>', unsafe_allow_html=True)
-    st.markdown("""
-    <div style="background: #eff6ff; color: #000000; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-    Este exemplo analisa como o <strong>coeficiente de descarga (Cd)</strong> afeta as medições de vazão.
-    O Cd leva em conta perdas e efeitos não ideais no escoamento.
-    </div>
-    """, unsafe_allow_html=True)
+    # Melhorado: reforça a importância do Cd de forma clara
+    st.header("⚙️ Exemplo 4 · Sensibilidade ao Coeficiente Cd")
+    st.caption("Entenda quanto uma pequena alteração em Cd impacta a vazão.")
+    st.write("")
+    st.info(
+        "Cd representa perdas e efeitos não ideais do Venturi. Variações nele alteram diretamente a vazão calculada.",
+        icon="🧠"
+    )
+    with st.expander("Valores avaliados"):
+        st.write("Cd de 0,90 a 1,00 (11 pontos) com Δh fixo em 15 cm.")
     
     sim = VenturiSimulator()
     cd_values = np.linspace(0.90, 1.00, 11)
@@ -255,13 +279,13 @@ def exemplo_4_sensibilidade_cd():
             variacao = ((sim.Q * 1000 - q_referencia) / q_referencia) * 100
         resultados.append({'Cd': cd, 'Q (L/s)': sim.Q * 1000, 'Variação (%)': variacao, 'ΔP (kPa)': sim.delta_P / 1000})
     
-    st.markdown("### 📋 Efeito de Cd na Vazão (Δh fixo = 15 cm)")
+    st.subheader("📋 Efeito de Cd na Vazão (Δh = 15 cm)")
     import pandas as pd
     df = pd.DataFrame(resultados)
     st.dataframe(df.style.format({'Cd': '{:.2f}', 'Q (L/s)': '{:.3f}', 'Variação (%)': '{:.2f}', 'ΔP (kPa)': '{:.3f}'}), width='stretch')
     
-    st.markdown("---")
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📊 Análise Estatística</div>', unsafe_allow_html=True)
+    st.divider()
+    st.subheader("📊 Análise Estatística")
     vazao_min = df['Q (L/s)'].min()
     vazao_max = df['Q (L/s)'].max()
     variacao_total = ((vazao_max - vazao_min) / vazao_min) * 100
@@ -273,8 +297,8 @@ def exemplo_4_sensibilidade_cd():
     with col3:
         st.metric("Variação Total", f"{variacao_total:.1f}%")
     
-    st.markdown("---")
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📈 Visualização do Efeito de Cd</div>', unsafe_allow_html=True)
+    st.divider()
+    st.subheader("📈 Visualização do Efeito de Cd")
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(10, 6), facecolor='white')
     ax.set_facecolor('white')
@@ -292,28 +316,27 @@ def exemplo_4_sensibilidade_cd():
     st.pyplot(fig)
     plt.close(fig)
     
-    st.markdown(f"""
-    <div style=\"background: #fffbeb; color: #000000; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 8px; margin: 1rem 0;\">
-    ⚠️ <strong>IMPORTANTE:</strong><br>
-    • Uma variação de 10% em Cd causa <strong>{variacao_total:.1f}%</strong> de variação na vazão!<br>
-    • É crucial ter um Cd preciso para medições confiáveis<br>
-    • O Cd típico para Venturi varia entre 0.95 e 0.98<br>
-    • O Cd depende do número de Reynolds e da geometria do medidor
-    </div>
-    """, unsafe_allow_html=True)
+    st.warning(
+        f"Atenção: 10% de variação em Cd pode gerar {variacao_total:.1f}% de diferença em Q. "
+        "Conheça o Cd do seu equipamento (normalmente 0,95–0,98) e acompanhe mudanças de regime.",
+        icon="⚠️"
+    )
 
 
 def exemplo_5_reynolds():
     """Exemplo 5: Análise de Número de Reynolds e Regimes de Escoamento"""
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">🌊 Exemplo 5: Análise de Número de Reynolds</div>', unsafe_allow_html=True)
-    
-    st.markdown("""
-    <div style="background: #eff6ff; color: #000000; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-    Este exemplo analisa o <strong>número de Reynolds</strong> e seus efeitos no comportamento do medidor de Venturi.
-    O número de Reynolds determina o regime de escoamento (laminar, transição ou turbulento) e influencia 
-    diretamente o coeficiente de descarga (Cd) e a precisão das medições.
-    </div>
-    """, unsafe_allow_html=True)
+    # Melhorado: explicação didática e uso de componentes nativos
+    st.header("🌊 Exemplo 5 · Número de Reynolds e Regimes")
+    st.caption("Identifique em qual regime seu Venturi opera e como isso afeta Cd.")
+    st.write("")
+    st.info(
+        "Re < 2300 → laminar • 2300 < Re < 4000 → transição • Re > 4000 → turbulento. "
+        "Use este painel para entender a influência da vazão no regime.",
+        icon="🌐"
+    )
+    with st.expander("Configuração fixa do Venturi"):
+        st.write("• D₁ = 0,10 m | D₂ = 0,05 m | Cd base = 0,97 | f = 0,02")
+        st.write("• Vazões simuladas: 0,001 a 0,030 m³/s (30 pontos)")
     
     # Parâmetros fixos
     D1 = 0.10  # m
@@ -361,7 +384,7 @@ def exemplo_5_reynolds():
     df = pd.DataFrame(resultados)
     
     # Estatísticas por regime
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 1.5rem 0 1rem 0; font-weight: 600;">📊 Distribuição dos Regimes de Escoamento</div>', unsafe_allow_html=True)
+    st.subheader("📊 Distribuição dos Regimes de Escoamento")
     
     laminar_count = len(df[df['Re'] < 2300])
     transicao_count = len(df[(df['Re'] >= 2300) & (df['Re'] < 4000)])
@@ -378,8 +401,8 @@ def exemplo_5_reynolds():
         st.metric("Turbulento (Re > 4000)", turbulento_count, delta=None)
     
     # Tabela resumida
-    st.markdown("---")
-    st.markdown("### 📋 Tabela de Resultados (Amostra)")
+    st.divider()
+    st.subheader("📋 Tabela de Resultados (Amostra)")
     
     # Mostrar apenas alguns pontos representativos
     indices_amostra = [0, len(df)//4, len(df)//2, 3*len(df)//4, len(df)-1]
@@ -396,8 +419,8 @@ def exemplo_5_reynolds():
     st.dataframe(styled_df, width='stretch')
     
     # Gráficos
-    st.markdown("---")
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📈 Visualizações do Número de Reynolds</div>', unsafe_allow_html=True)
+    st.divider()
+    st.subheader("📈 Visualizações do Número de Reynolds")
     
     import matplotlib.pyplot as plt
     
@@ -466,8 +489,8 @@ def exemplo_5_reynolds():
     plt.close(fig)
     
     # Análise e conclusões
-    st.markdown("---")
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📊 Análise e Conclusões</div>', unsafe_allow_html=True)
+    st.divider()
+    st.subheader("📊 Análise e Conclusões")
     
     re_min = df['Re'].min()
     re_max = df['Re'].max()
@@ -481,30 +504,13 @@ def exemplo_5_reynolds():
     with col3:
         st.metric("Re Máximo", f"{re_max:,.0f}")
     
-    st.markdown("""
-    <div style="background: #eff6ff; color: #000000; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-    <strong>Observações Importantes:</strong><br><br>
-    
-    • <strong>Regime Laminar (Re < 2300):</strong><br>
-      &nbsp;&nbsp;⚠️ Baixas vazões resultam em escoamento laminar<br>
-      &nbsp;&nbsp;⚠️ Cd menor e menos estável<br>
-      &nbsp;&nbsp;⚠️ Não recomendado para medidores de vazão<br><br>
-    
-    • <strong>Regime de Transição (2300 < Re < 4000):</strong><br>
-      &nbsp;&nbsp;🔄 Comportamento instável e imprevisível<br>
-      &nbsp;&nbsp;🔄 Cd varia significativamente<br>
-      &nbsp;&nbsp;🔄 Evitar esta faixa em aplicações práticas<br><br>
-    
-    • <strong>Regime Turbulento (Re > 4000):</strong><br>
-      &nbsp;&nbsp;✅ Comportamento estável e previsível<br>
-      &nbsp;&nbsp;✅ Cd mais alto e constante<br>
-      &nbsp;&nbsp;✅ Recomendado para medidores de vazão<br><br>
-    
-    • <strong>Recomendação ISO 5167:</strong> Re > 2×10⁴ para medidores calibrados<br>
-    • <strong>Prática Industrial:</strong> Re > 10⁴ é geralmente desejável<br>
-    • <strong>Cd aumenta com Re</strong> até estabilizar para Re > 10⁵
-    </div>
-    """, unsafe_allow_html=True)
+    st.info(
+        "Regime laminar (Re < 2300): Cd mais baixo e medições instáveis.\n"
+        "Regime de transição (2300–4000): evite operar aqui, pois Cd varia bastante.\n"
+        "Regime turbulento (Re > 4000): ideal para medição, com Cd estável.\n"
+        "Referências: ISO 5167 recomenda Re > 2×10⁴ · prática industrial busca Re > 10⁴.",
+        icon="ℹ️"
+    )
 
 
 def plt_close(fig):
