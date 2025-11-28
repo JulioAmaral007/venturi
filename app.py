@@ -699,7 +699,9 @@ def main():
     Re = sim.calcular_reynolds()
     display_reynolds_indicator(Re)
     
+    st.write("")
     st.markdown("---")
+    st.write("")
     
     # Abas para organizar visualizações (reduzido de 3 para 2)
     tab1, tab2 = st.tabs([
@@ -742,6 +744,7 @@ def main():
     
     with tab2:
         st.subheader("Resultados Numéricos Completos")
+        st.caption("Detalhe completo das propriedades calculadas. Use para relatórios ou calibrações.")
         
         Re = sim.calcular_reynolds()
         
@@ -789,13 +792,10 @@ def main():
         st.markdown("**Regime de Escoamento:**")
         display_reynolds_indicator(Re)
     
-    # Rodapé
-    st.markdown("""
-    <div style="text-align: center; padding: 2rem; color: #64748b; border-top: 1px solid #e2e8f0; margin-top: 3rem;">
-        <p><strong>🔬 Simulador de Medidor de Venturi</strong></p>
-        <p>Desenvolvido com Streamlit + Python | Modo: {}</p>
-    </div>
-    """.format(mode), unsafe_allow_html=True)
+    # Melhorado: rodapé nativo e resumido
+    st.write("")
+    st.divider()
+    st.caption(f"🔬 Simulador de Medidor de Venturi • Modo atual: {mode}")
 
 
 if __name__ == "__main__":
