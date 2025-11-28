@@ -110,11 +110,15 @@ TOOLTIPS = {
     
     # Fluidos
     'rho': 'Densidade do fluido que escoa pelo medidor. Afeta a pressão e o número de Reynolds.',
+    'nu': 'Viscosidade cinemática (ν = μ/ρ). Afeta diretamente o número de Reynolds.',
     'rho_m': 'Densidade do fluido manométrico (geralmente mercúrio). Usado para calcular Δh.',
     'fluid_preset': 'Selecione um fluido comum ou "Personalizado" para definir propriedades manualmente.',
     
     # Escoamento
     'Q': 'Vazão volumétrica do fluido. Quanto maior a vazão, maior a velocidade e a queda de pressão.',
+    'flow_input_choice': 'Escolha se deseja informar diretamente a vazão ou a velocidade.',
+    'v1_input': 'Velocidade média na seção de entrada (D₁). O simulador converte automaticamente para vazão.',
+    'v2_input': 'Velocidade média na garganta (D₂). O simulador converte automaticamente para vazão.',
     'delta_h': 'Desnível observado no manômetro diferencial. Relacionado à queda de pressão.',
     
     # Parâmetros avançados
