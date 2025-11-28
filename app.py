@@ -496,7 +496,7 @@ def render_sistema_tubulacoes():
     with st.expander("📚 Fundamentos Teóricos e Metodologia de Cálculo", expanded=False):
         try:
             project_root = Path(__file__).parent
-            venturi_image = project_root / "assets" / "tubo-venturi.webp"
+            venturi_image = project_root / "assets" / "venturi.jpeg"
 
             if venturi_image.exists():
                 st.image(
