@@ -1,0 +1,124 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{booktabs}
+
+\geometry{a4paper, margin=2.5cm}
+
+\title{Relatório Final -- Simulador de Medidor de Venturi}
+\author{Disciplina de Mecânica dos Fluidos e Engenharia de Computação}
+\date{Novembro de 2025}
+
+\begin{document}
+\maketitle
+
+\section{Introdução ao Projeto}
+O Simulador de Medidor de Venturi é uma aplicação web interativa desenvolvida em \texttt{Streamlit} (Python).
+Este projeto foi concebido para colmatar a lacuna entre a teoria clássica e a prática de engenharia, permitindo aos estudantes visualizar como variações geométricas e propriedades do fluido afetam o escoamento em tempo real. A ferramenta simula os modos de operação \emph{Ideal}, \emph{Realista} e \emph{Medidor}, integrando conceitos de perda de carga, número de Reynolds e coeficientes de calibração, essenciais para a formação do engenheiro contemporâneo.
+
+
+\section{Descrição Geral do Sistema / Aplicação}
+\subsection*{Objetivo e funcionalidades}
+O simulador oferece uma interface web interativa que permite:
+\begin{itemize}[nosep]
+    \item Simulação interativa com configuração direta de diâmetros, comprimentos, vazão ou desnível, coeficiente de descarga (\(C_d\)) e fator de atrito (\(f\)).
+    \item Operar em três modos distintos: \emph{Ideal} (sem perdas de energia), \emph{Realista} (considerando perdas por atrito e \(C_d < 1\)) e \emph{Medidor} (calcula a vazão a partir da leitura do desnível \(\Delta h\)).
+    \item Visualizar graficamente o comportamento do escoamento através de diagrama geométrico do Venturi, representação do manômetro diferencial, perfil de pressão ao longo do tubo e linhas piezométrica e de energia.
+    \item Consultar resultados numéricos detalhados incluindo velocidades, pressões, vazão, número de Reynolds e perdas de carga.
+    \item Explorar cinco exemplos práticos guiados que demonstram diferentes aspectos do funcionamento do medidor.
+\end{itemize}
+
+\subsection*{Fluxo de uso}
+O usuário interage com o simulador da seguinte forma:
+\begin{enumerate}[nosep]
+    \item Define os parâmetros geométricos do Venturi (diâmetros e comprimento) na barra lateral.
+    \item Informa as propriedades dos fluidos (densidade do fluido principal e do fluido manométrico).
+    \item Escolhe o modo de operação e fornece a condição de entrada (vazão conhecida ou desnível medido).
+    \item Ajusta parâmetros avançados como coeficiente de atrito e coeficiente de descarga, se necessário.
+    \item Visualiza os resultados instantaneamente: métricas numéricas, gráficos e tabelas que se atualizam automaticamente a cada alteração.
+\end{enumerate}
+O sistema processa as entradas e apresenta os resultados de forma imediata, permitindo análises paramétricas rápidas e comparações entre diferentes configurações.
+
+\section{Como a Engenharia de Computação foi utilizada}
+O projeto aplica conhecimentos de Engenharia de Computação de três formas principais:
+\begin{itemize}[nosep]
+    \item \textbf{Desenvolvimento de software e interface}: criação de uma aplicação web interativa usando python e streamlit que permite ao usuário ajustar parâmetros e visualizar resultados instantaneamente, com interface organizada e fácil de usar.
+    \item \textbf{Automação de cálculos e visualização}: o sistema realiza automaticamente os cálculos complexos das equações da Mecânica dos Fluidos (Bernoulli, continuidade, Darcy–Weisbach), gerando gráficos, tabelas e resultados numéricos que facilitam a compreensão dos fenômenos físicos, eliminando cálculos manuais e reduzindo erros.
+    \item \textbf{Modelagem e simulação computacional}: transformação do medidor de Venturi físico em um modelo virtual que pode ser explorado de forma segura e didática, permitindo testar diferentes cenários e configurações sem necessidade de equipamentos reais, conectando teoria e prática de forma acessível.
+\end{itemize}
+
+\section{Conteúdo de Fluidos aplicado no projeto}
+
+\subsection*{4.1 Definição de fluido, análise e propriedades}
+Fluido é qualquer substância capaz de escoar sob pequenas tensões de cisalhamento. Propriedades fundamentais utilizadas no simulador: densidade \(\rho\) (kg/m\(^3\)), viscosidade dinâmica \(\mu\) (Pa·s), viscosidade cinemática \(\nu = \mu/\rho\), pressão \(P\) (Pa) e gravidade específica. O usuário informa diretamente a densidade do fluido principal (\(\rho\)) e do fluido manométrico (\(\rho_m\)). Para o cálculo do número de Reynolds, o sistema adota uma viscosidade cinemática típica de \(\nu = 10^{-6}\,\text{m}^2/\text{s}\) para água. A modelagem considera regime permanente e fluido incompressível.
+
+\subsection*{4.2 Forças hidrostáticas e empuxo}
+As forças hidrostáticas decorrem da distribuição de pressão em fluidos em repouso. A relação entre pressão e coluna manométrica é:
+\[
+\Delta P = (\rho_m - \rho) g \Delta h
+\]
+onde \(g=9{,}81\ \text{m/s}^2\) e \(\Delta h\) é o desnível medido. O simulador utiliza essa equação tanto para converter \(\Delta h\) em \(\Delta P\) (modo Medidor) quanto para estimar o desnível a partir da queda de pressão calculada (modos Ideal/Realista). O conceito de empuxo aparece implicitamente ao comparar massas específicas de fluido de processo e manométrico.
+
+\subsection*{4.3 Equações básicas na forma integral para volume de controle}
+As bases são a equação da continuidade e a conservação de energia/massa. Para fluido incompressível em regime permanente:
+\[
+Q = A_1 v_1 = A_2 v_2
+\]
+e a equação de Bernoulli integral (com perdas) entre duas seções horizontais:
+\[
+\frac{P_1}{\rho g} + \frac{v_1^2}{2g} = \frac{P_2}{\rho g} + \frac{v_2^2}{2g} + h_L
+\]
+O simulador combina a equação da continuidade para determinar as velocidades \(v_1\) e \(v_2\) e, em seguida, calcula a queda de pressão \(\Delta P\) considerando ou não as perdas, conforme o modo selecionado, gerando os resultados apresentados nas visualizações e métricas.
+
+\subsection*{4.4 Equações de Euler e Bernoulli}
+A equação de Euler descreve o equilíbrio dinâmico em um fluido invíscido. Integrando-a ao longo de uma linha de corrente obtém-se Bernoulli:
+\[
+\frac{P}{\rho g} + \frac{v^2}{2g} + z = \text{constante}
+\]
+Para o Venturi horizontal (\(z_1 = z_2\)), resulta:
+\[
+\Delta P = \frac{1}{2}\rho (v_2^2 - v_1^2)
+\]
+Para o medidor real, a vazão é corrigida com \(C_d\):
+\[
+Q = C_d A_2 \sqrt{\frac{2 \Delta P}{\rho (1 - \beta^4)}}, \quad \beta = \frac{D_2}{D_1}.
+\]
+Essas fórmulas são aplicadas automaticamente pelo simulador, permitindo explorar o efeito do coeficiente de descarga e da razão de diâmetros sobre o comportamento do medidor.
+
+\subsection*{4.5 Escoamento em dutos}
+O escoamento interno sofre perdas distribuídas representadas pela equação de Darcy–Weisbach:
+\[
+h_L = f \frac{L}{D_\text{médio}} \frac{v_{\text{médio}}^2}{2g}
+\]
+Onde \(f\) é controle do usuário, \(L\) é o comprimento efetivo e \(D_\text{médio} = (D_1 + D_2)/2\). O simulador adiciona \(h_L\) à forma modificada de Bernoulli para o modo Realista, produzindo linhas de energia decrescentes e exibindo o impacto de perdas menores e maiores variações de velocidade entre seções.
+
+\section{Funcionamento Técnico do Projeto}
+O funcionamento do simulador segue os seguintes passos:
+\begin{enumerate}[nosep]
+    \item \textbf{Entrada de parâmetros}: o usuário informa na barra lateral os dados geométricos do Venturi (diâmetros \(D_1\) e \(D_2\), comprimento \(L\)), propriedades dos fluidos (densidade \(\rho\) do fluido principal e \(\rho_m\) do fluido manométrico), condições de escoamento (vazão \(Q\) ou desnível \(\Delta h\)) e parâmetros avançados (coeficiente de atrito \(f\) e coeficiente de descarga \(C_d\)).
+    \item \textbf{Seleção do modo de operação}: o usuário escolhe entre calcular a partir da vazão conhecida (modos Ideal ou Realista) ou a partir do desnível medido (modo Medidor). Também pode optar por explorar exemplos práticos pré-configurados.
+    \item \textbf{Processamento automático}: o sistema calcula automaticamente as áreas das seções, velocidades do escoamento, pressões, perdas de carga e número de Reynolds, aplicando as equações fundamentais da Mecânica dos Fluidos conforme o modo selecionado.
+    \item \textbf{Geração de visualizações}: são criados gráficos que mostram o diagrama do Venturi, o manômetro diferencial, o perfil de pressão ao longo do tubo e as linhas de energia, apresentados em abas organizadas para fácil navegação.
+    \item \textbf{Apresentação dos resultados}: os resultados numéricos são exibidos em métricas destacadas, tabelas detalhadas e mensagens que indicam o regime de escoamento identificado (laminar, transição ou turbulento).
+\end{enumerate}
+O sistema funciona de forma reativa: qualquer alteração nos parâmetros na barra lateral aciona imediatamente novos cálculos e atualiza todas as visualizações e resultados simultaneamente, permitindo análises paramétricas rápidas e eficientes.
+
+\section{Exemplos práticos apresentados no projeto}
+\begin{description}[style=nextline, leftmargin=0cm]
+    \item[Exemplo 1 -- Ideal vs Realista] Compara \(C_d=1\) e \(f=0\) contra \(C_d=0{,}96\) e \(f=0{,}025\) para \(D_1=0{,}10\ \text{m}\), \(D_2=0{,}05\ \text{m}\), \(Q=0{,}015\ \text{m}^3/\text{s}\). O usuário observa o aumento de \(\Delta P\), \(\Delta h\) e \(h_L\) quando há perdas.
+    \item[Exemplo 2 -- Curva de calibração] Gera 20 pontos de vazão entre 5 e 30 L/s, exibindo tabela e gráfico \(Q \times \Delta h\). Demonstra a relação \(Q \propto \sqrt{\Delta h}\) e fornece base para calibração de campo.
+    \item[Exemplo 3 -- Modo Medidor] Converte leituras de \(\Delta h\) (5 a 25 cm) em vazões e velocidades, além de gráficos \(Q \times \Delta h\) e \(Q \times \sqrt{\Delta h}\). Relaciona teoria de Bernoulli à prática de instrumentação.
+    \item[Exemplo 4 -- Sensibilidade ao \(C_d\)] Mantém \(\Delta h = 15\ \text{cm}\) e varia \(C_d\) de 0,90 a 1,00. Mostra que 10\% de variação em \(C_d\) impacta a vazão em magnitude equivalente, alertando para calibração precisa.
+    \item[Exemplo 5 -- Número de Reynolds] Varre \(Q\) de 1 a 30 L/s, classifica regimes (laminar, transição, turbulento) e estima \(C_d\) conforme Reynolds. Gráficos explicam a zona recomendada (\(Re > 10^4\)).
+\end{description}
+Cada exemplo conecta diretamente os conceitos teóricos aos resultados computacionais, orientando o usuário sobre interpretações e limites operacionais.
+
+\section{Conclusão}
+O simulador consolidou teoria e prática de Mecânica dos Fluidos em uma ferramenta acessível, permitindo manipular parâmetros e visualizar consequências físicas instantaneamente. O desenvolvimento demonstrou a integração entre modelagem matemática, programação, visualização de dados e design de interfaces. Foram observadas relações essenciais do medidor de Venturi: dependência do coeficiente de descarga \(C_d\), influência das perdas de carga e efeito dos regimes de escoamento sobre as leituras manométricas. Como trabalhos futuros, recomenda-se incorporar modelos mais sofisticados de rugosidade, suporte a fluidos compressíveis e funcionalidades de exportação de resultados para integração com outras ferramentas.
+
+\end{document}

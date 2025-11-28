@@ -493,11 +493,19 @@ def exemplo_5_efeito_beta():
 # ========== INTERFACE STREAMLIT ==========
 
 def main():
+    from app_modules.components import (
+        parameter_slider, fluid_preset_selector, manometric_fluid_selector,
+        validate_geometry, display_beta_ratio, create_expander, error_box,
+        warning_box, info_box
+    )
+    from app_modules.utils import get_fluid_properties, get_manometric_density
+    from app_modules.constants import ICONS, TOOLTIPS
+    
     # Sidebar com controles
-    st.sidebar.header("⚙️ Parâmetros de Controle")
+    st.sidebar.header(f"{ICONS['settings']} Configuração do Simulador")
     
     # Seletor de modo (Simulação ou Exemplos)
-    st.sidebar.subheader("🎯 Modo de Operação")
+    st.sidebar.subheader(f"{ICONS['mode']} Modo de Operação")
     app_mode = st.sidebar.radio(
         "Escolha o modo:",
         options=['Simulação Interativa', 'Exemplos Práticos'],
@@ -517,51 +525,132 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    # Continuar com simulação interativa
+    # Tipo de simulação
     mode = st.sidebar.radio(
-        "Tipo de simulação:",
+        f"{ICONS['science']} Tipo de Simulação:",
         options=['Ideal', 'Realista', 'Medidor'],
-        help="Ideal: sem perdas | Realista: com perdas | Medidor: calcula Q a partir de Δh"
+        help=f"Ideal: {TOOLTIPS['modo_ideal']}\nRealista: {TOOLTIPS['modo_realista']}\nMedidor: {TOOLTIPS['modo_medidor']}"
     )
     
     st.sidebar.markdown("---")
     
-    # Parâmetros geométricos
-    st.sidebar.subheader("📐 Geometria")
-    D1 = st.sidebar.slider("D₁ - Diâmetro de entrada (m)", 0.05, 0.30, 0.10, 0.01)
-    D2 = st.sidebar.slider("D₂ - Diâmetro da garganta (m)", 0.02, 0.15, 0.05, 0.01)
-    L = st.sidebar.slider("L - Comprimento total (m)", 0.5, 3.0, 1.0, 0.1)
+    # Parâmetros geométricos (com expander)
+    with create_expander(f"{ICONS['geometry']} Geometria", expanded=True):
+        D1 = parameter_slider(
+            "D₁ - Diâmetro de entrada (m)",
+            min_value=0.05,
+            max_value=0.30,
+            default_value=0.10,
+            step=0.01,
+            tooltip_key='D1',
+            key='D1_slider'
+        )
+        
+        D2 = parameter_slider(
+            "D₂ - Diâmetro da garganta (m)",
+            min_value=0.02,
+            max_value=0.15,
+            default_value=0.05,
+            step=0.01,
+            tooltip_key='D2',
+            key='D2_slider'
+        )
+        
+        # Mostrar razão beta
+        display_beta_ratio(D1, D2)
+        
+        L = parameter_slider(
+            "L - Comprimento total (m)",
+            min_value=0.5,
+            max_value=3.0,
+            default_value=1.0,
+            step=0.1,
+            tooltip_key='L',
+            key='L_slider'
+        )
     
-    st.sidebar.markdown("---")
+    # Propriedades dos fluidos (com expander e presets)
+    with create_expander(f"{ICONS['fluid']} Fluido", expanded=True):
+        # Seletor de preset
+        fluid_name = fluid_preset_selector(key='fluid_preset')
+        fluid_props = get_fluid_properties(fluid_name)
+        
+        # Se personalizado, permitir edição
+        if fluid_name == 'Personalizado':
+            rho = st.slider(
+                "ρ - Densidade do fluido (kg/m³)",
+                min_value=500,
+                max_value=2000,
+                value=1000,
+                step=50,
+                help=TOOLTIPS.get('rho', ''),
+                key='rho_custom'
+            )
+        else:
+            rho = fluid_props['rho']
+            st.metric("Densidade ρ", f"{rho} kg/m³")
+        
+        # Fluido manométrico fixo (Mercúrio)
+        st.markdown("**Fluido Manométrico**")
+        st.caption("Mercúrio (Hg)")
+        rho_m = 13600  # kg/m³ (densidade do mercúrio)
+        st.metric("Densidade ρₘ", f"{rho_m} kg/m³")
     
-    # Propriedades dos fluidos
-    st.sidebar.subheader("💧 Propriedades dos Fluidos")
-    rho = st.sidebar.slider("ρ - Densidade do fluido (kg/m³)", 500, 2000, 1000, 50)
-    rho_m = st.sidebar.slider("ρₘ - Densidade manométrica (kg/m³)", 10000, 15000, 13600, 100)
+    # Condições de escoamento (com expander)
+    with create_expander(f"{ICONS['flow']} Condições de Escoamento", expanded=True):
+        if mode == 'Medidor':
+            delta_h = parameter_slider(
+                "Δh - Desnível manométrico (m)",
+                min_value=0.01,
+                max_value=0.5,
+                default_value=0.1,
+                step=0.01,
+                tooltip_key='delta_h',
+                key='delta_h_slider'
+            )
+            Q = None  # Será calculado
+        else:
+            Q = parameter_slider(
+                "Q - Vazão volumétrica (m³/s)",
+                min_value=0.001,
+                max_value=0.05,
+                default_value=0.01,
+                step=0.001,
+                tooltip_key='Q',
+                key='Q_slider',
+                format_str="%.4f"
+            )
+            delta_h = None  # Será calculado
     
-    st.sidebar.markdown("---")
+    # Parâmetros avançados (em expander fechado)
+    with create_expander(f"{ICONS['advanced']} Parâmetros Avançados", expanded=False):
+        f = parameter_slider(
+            "f - Coeficiente de atrito",
+            min_value=0.01,
+            max_value=0.10,
+            default_value=0.02,
+            step=0.005,
+            tooltip_key='f',
+            key='f_slider'
+        )
+        
+        Cd = parameter_slider(
+            "Cd - Coeficiente de descarga",
+            min_value=0.90,
+            max_value=1.00,
+            default_value=0.98,
+            step=0.01,
+            tooltip_key='Cd',
+            key='Cd_slider'
+        )
     
-    # Condições de escoamento
-    st.sidebar.subheader("🌊 Condições de Escoamento")
-    
-    if mode == 'Medidor':
-        delta_h = st.sidebar.slider("Δh - Desnível manométrico (m)", 0.01, 0.5, 0.1, 0.01)
-        Q = None  # Será calculado
-    else:
-        Q = st.sidebar.slider("Q - Vazão volumétrica (m³/s)", 0.001, 0.05, 0.01, 0.001)
-        delta_h = None  # Será calculado
-    
-    st.sidebar.markdown("---")
-    
-    # Parâmetros avançados
-    st.sidebar.subheader("🔧 Parâmetros Avançados")
-    f = st.sidebar.slider("f - Coeficiente de atrito", 0.01, 0.10, 0.02, 0.005)
-    Cd = st.sidebar.slider("Cd - Coeficiente de descarga", 0.90, 1.00, 0.98, 0.01)
-    
-    # Validação
-    if D2 >= D1:
-        st.error("⚠️ ERRO: D₂ deve ser menor que D₁!")
+    # Validação com feedback visual
+    is_valid, error_msg = validate_geometry(D1, D2)
+    if not is_valid:
+        error_box(error_msg)
         return
+    elif error_msg:  # Aviso, não erro crítico
+        warning_box(error_msg)
     
     # Criar simulador e calcular
     sim = VenturiSimulator()
@@ -569,55 +658,89 @@ def main():
     
     # ========== LAYOUT PRINCIPAL ==========
     
+    from app_modules.components import section_header, display_reynolds_indicator
+    
     # Métricas principais
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📊 Resultados Principais</div>', unsafe_allow_html=True)
+    section_header("Resultados Principais", icon=ICONS['results'])
     
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric("Vazão Q", f"{sim.Q*1000:.2f} L/s", f"{sim.Q*3600:.1f} m³/h")
+        st.metric(
+            "Vazão Q", 
+            f"{sim.Q*1000:.2f} L/s", 
+            f"{sim.Q*3600:.1f} m³/h",
+            help="Vazão volumétrica do fluido"
+        )
     
     with col2:
-        st.metric("Desnível Δh", f"{sim.delta_h*100:.2f} cm", f"{sim.delta_h:.4f} m")
+        st.metric(
+            "Desnível Δh", 
+            f"{sim.delta_h*100:.2f} cm", 
+            f"{sim.delta_h:.4f} m",
+            help="Desnível observado no manômetro diferencial"
+        )
     
     with col3:
-        st.metric("Velocidade v₁", f"{sim.v1:.3f} m/s")
+        st.metric(
+            "Velocidade v₁", 
+            f"{sim.v1:.3f} m/s",
+            help="Velocidade na seção de entrada"
+        )
     
     with col4:
-        st.metric("Velocidade v₂", f"{sim.v2:.3f} m/s")
+        st.metric(
+            "Velocidade v₂", 
+            f"{sim.v2:.3f} m/s",
+            help="Velocidade na garganta (seção mais estreita)"
+        )
+    
+    # Indicador de Reynolds
+    Re = sim.calcular_reynolds()
+    display_reynolds_indicator(Re)
     
     st.markdown("---")
     
-    # Abas para organizar visualizações
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📐 Diagrama", "🔬 Manômetro", "📈 Pressão", "⚡ Energia", "📋 Resultados Completos"
+    # Abas para organizar visualizações (reduzido de 3 para 2)
+    tab1, tab2 = st.tabs([
+        f"{ICONS['diagram']} Visão Geral", 
+        f"{ICONS['data']} Dados Completos"
     ])
     
     with tab1:
-        st.subheader("Diagrama Esquemático do Venturi")
-        fig = plotar_diagrama_venturi(sim)
-        st.pyplot(fig)
-        plt.close(fig)
+        # Primeira linha: Diagrama e Manômetro
+        col_diag, col_man = st.columns([1.2, 1])
+        
+        with col_diag:
+            st.markdown("**Diagrama Esquemático do Venturi**")
+            fig = plotar_diagrama_venturi(sim)
+            st.pyplot(fig)
+            plt.close(fig)
+        
+        with col_man:
+            st.markdown("**Manômetro Diferencial em U**")
+            fig = plotar_manometro(sim)
+            st.pyplot(fig)
+            plt.close(fig)
+        
+        st.markdown("---")
+        
+        # Segunda linha: Perfil de Pressão e Linhas de Energia lado a lado
+        col_press, col_energy = st.columns(2)
+        
+        with col_press:
+            st.markdown("**Perfil de Pressão ao Longo do Tubo**")
+            fig = plotar_perfil_pressao(sim)
+            st.pyplot(fig)
+            plt.close(fig)
+        
+        with col_energy:
+            st.markdown("**Linhas de Energia e Piezométrica**")
+            fig = plotar_linhas_energia(sim)
+            st.pyplot(fig)
+            plt.close(fig)
     
     with tab2:
-        st.subheader("Manômetro Diferencial em U")
-        fig = plotar_manometro(sim)
-        st.pyplot(fig)
-        plt.close(fig)
-    
-    with tab3:
-        st.subheader("Perfil de Pressão ao Longo do Tubo")
-        fig = plotar_perfil_pressao(sim)
-        st.pyplot(fig)
-        plt.close(fig)
-    
-    with tab4:
-        st.subheader("Linhas de Energia e Piezométrica")
-        fig = plotar_linhas_energia(sim)
-        st.pyplot(fig)
-        plt.close(fig)
-    
-    with tab5:
         st.subheader("Resultados Numéricos Completos")
         
         Re = sim.calcular_reynolds()
@@ -661,14 +784,10 @@ def main():
             st.write(f"• Carga cinética (2) = {sim.v2**2/(2*sim.g):.4f} m")
             st.write(f"• Perda de carga hₗ = {sim.h_L:.4f} m")
         
-        # Indicador de regime
+        # Indicador de regime (já mostrado acima, remover duplicação)
         st.markdown("---")
-        if Re < 2300:
-            st.markdown('<div style="background: #fffbeb; color: #000000; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 8px; margin: 1rem 0;">⚠️ <strong>Regime LAMINAR</strong> (Re < 2300)</div>', unsafe_allow_html=True)
-        elif Re < 4000:
-            st.markdown('<div style="background: #eff6ff; color: #000000; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">🔄 <strong>Regime de TRANSIÇÃO</strong> (2300 < Re < 4000)</div>', unsafe_allow_html=True)
-        else:
-            st.markdown('<div style="background: #f0fdf4; color: #000000; border-left: 4px solid #10b981; padding: 1rem; border-radius: 8px; margin: 1rem 0;">✅ <strong>Regime TURBULENTO</strong> (Re > 4000)</div>', unsafe_allow_html=True)
+        st.markdown("**Regime de Escoamento:**")
+        display_reynolds_indicator(Re)
     
     # Rodapé
     st.markdown("""

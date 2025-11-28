@@ -5,7 +5,7 @@ from matplotlib.patches import Rectangle
 
 def plotar_diagrama_venturi(sim):
     """Plota o diagrama esquemático do Venturi."""
-    fig, ax = plt.subplots(figsize=(10, 4))
+    fig, ax = plt.subplots(figsize=(10, 5))
     ax.set_xlim(0, sim.L)
     ax.set_ylim(-sim.D1, sim.D1)
     ax.set_aspect('equal')
@@ -62,7 +62,7 @@ def plotar_diagrama_venturi(sim):
 
 def plotar_manometro(sim):
     """Plota o manômetro em U."""
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(10, 5))
     ax.set_xlim(-0.5, 2.5)
     ax.set_ylim(-0.05, 0.8)
     ax.set_aspect('equal')

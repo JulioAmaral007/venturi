@@ -6,6 +6,7 @@ from .plots import plotar_perfil_pressao, plotar_linhas_energia
 
 def executar_exemplos():
     """Interface para executar os exemplos práticos do simulador."""
+    # Título usando HTML (mantido para consistência visual)
     st.markdown('<div style="background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%); padding: 2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"><h1 style="color: white; margin: 0; font-size: 2rem; font-weight: 700;">📚 Exemplos Práticos</h1><p style="color: rgba(255, 255, 0, 1); margin: 0.5rem 0 0 0; font-size: 1.1rem;">Explore diferentes casos de uso do medidor de Venturi através de exemplos pré-configurados</p></div>', unsafe_allow_html=True)
     
     st.sidebar.markdown("---")
@@ -38,14 +39,13 @@ def executar_exemplos():
 
 
 def exemplo_1_comparacao_modos():
-    st.markdown('<div style="color: white; padding: 1rem 1.5rem; margin: 0; font-weight: 600;">🔵🔴 Exemplo 1: Comparação Modo Ideal vs Modo Realista</div>', unsafe_allow_html=True)
-    st.markdown("""
-    <div style="background: #eff6ff; color: #000000; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-    Este exemplo compara o comportamento do medidor de Venturi em duas condições:<br>
-    • <strong>Modo Ideal</strong>: Escoamento sem perdas (Cd = 1.0, sem atrito)<br>
-    • <strong>Modo Realista</strong>: Escoamento com perdas por atrito e coeficiente de descarga real
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("### 🔵🔴 Exemplo 1: Comparação Modo Ideal vs Modo Realista")
+    st.info("""
+    Este exemplo compara o comportamento do medidor de Venturi em duas condições:
+    
+    • **Modo Ideal**: Escoamento sem perdas (Cd = 1.0, sem atrito)
+    • **Modo Realista**: Escoamento com perdas por atrito e coeficiente de descarga real
+    """)
     
     D1 = 0.10
     D2 = 0.05
@@ -74,7 +74,7 @@ def exemplo_1_comparacao_modos():
         st.metric("Perda de Carga hₗ", f"{sim_real.h_L:.6f} m", "com perdas")
     
     st.markdown("---")
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📊 Análise das Diferenças</div>', unsafe_allow_html=True)
+    st.markdown("### 📊 Análise das Diferenças")
     
     diff_p = ((sim_real.delta_P - sim_ideal.delta_P) / sim_ideal.delta_P) * 100
     diff_h = ((sim_real.delta_h - sim_ideal.delta_h) / sim_ideal.delta_h) * 100
@@ -100,13 +100,11 @@ def exemplo_1_comparacao_modos():
 
 
 def exemplo_2_curva_calibracao():
-    st.markdown('<div style="color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📈 Exemplo 2: Curva de Calibração do Medidor</div>', unsafe_allow_html=True)
-    st.markdown("""
-    <div style="background: #eff6ff; color: #000000; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-    Este exemplo gera uma <strong>curva de calibração</strong> relacionando a vazão volumétrica (Q) 
+    st.markdown("### 📈 Exemplo 2: Curva de Calibração do Medidor")
+    st.info("""
+    Este exemplo gera uma **curva de calibração** relacionando a vazão volumétrica (Q) 
     com o desnível manométrico (Δh) para um medidor de Venturi específico.
-    </div>
-    """, unsafe_allow_html=True)
+    """)
     
     sim = VenturiSimulator()
     vazoes = np.linspace(0.005, 0.030, 20)
@@ -120,7 +118,7 @@ def exemplo_2_curva_calibracao():
             pressoes.append(sim.delta_P / 1000)
             reynolds.append(sim.calcular_reynolds())
     
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📊 Resumo da Calibração</div>', unsafe_allow_html=True)
+    st.markdown("#### 📊 Resumo da Calibração")
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("Faixa de Vazão", f"{vazoes[0]*1000:.1f} - {vazoes[-1]*1000:.1f} L/s")
@@ -146,7 +144,7 @@ def exemplo_2_curva_calibracao():
     }), width='stretch')
     
     st.markdown("---")
-    st.markdown('<div style="background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin: 0 0 1rem 0; font-weight: 600;">📈 Curva de Calibração</div>', unsafe_allow_html=True)
+    st.markdown("#### 📈 Curva de Calibração")
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(10, 6), facecolor='white')
     ax.set_facecolor('white')
@@ -162,7 +160,7 @@ def exemplo_2_curva_calibracao():
     plt.tight_layout()
     st.pyplot(fig)
     plt.close(fig)
-    st.markdown('<div style="background: #f0fdf4; color: #000000; border-left: 4px solid #10b981; padding: 1rem; border-radius: 8px; margin: 1rem 0;">✅ A curva mostra a relação quadrática entre vazão e desnível: <strong>Q ∝ √(Δh)</strong></div>', unsafe_allow_html=True)
+    st.success("✅ A curva mostra a relação quadrática entre vazão e desnível: **Q ∝ √(Δh)**")
 
 
 def exemplo_3_modo_medidor():
