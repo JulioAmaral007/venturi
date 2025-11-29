@@ -6,7 +6,7 @@ class VenturiSimulator:
     def __init__(self):
         self.g = 9.81  
         
-    def calcular(self, D1, D2, L_garganta, rho, rho_m, Q, delta_h, f, Cd, mode, mu, P1):
+    def calcular(self, D1, D2, L_garganta, rho, rho_m, Q, delta_h, f, mode, mu, P1):
         self.D1 = D1
         self.D2 = D2
         self.L_garganta = L_garganta
@@ -15,7 +15,6 @@ class VenturiSimulator:
         self.Q = Q
         self.delta_h = delta_h
         self.f = f
-        self.Cd = Cd
         self.mode = mode
         self.mu=mu
         self.P1 = P1

@@ -632,9 +632,6 @@ def main():
                 epsilon = obter_rugosidade_material(material_tubo)
                 st.info("ℹ️ No modo Ideal, as perdas são zero. O material do tubo não afeta os resultados.")
             
-            # Coeficiente de descarga fixo (valor típico para Venturi)
-            Cd = 0.98
-    
     # Validação com feedback visual
     beta = D2 / D1
     if D2 >= D1 or (beta < 0.3) or (beta > 0.75):
@@ -677,7 +674,7 @@ def main():
     
     # Criar simulador e calcular
     sim = VenturiSimulator()
-    sim.calcular(D1, D2, L, rho, rho_m, Q, 0, f, Cd, mode, mu, p1_input)
+    sim.calcular(D1, D2, L, rho, rho_m, Q, 0, f, mode, mu, p1_input)
     
     # ========== LAYOUT PRINCIPAL ==========
     

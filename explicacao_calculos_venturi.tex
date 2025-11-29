@@ -1,0 +1,1891 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{physics}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=5pt,
+    frame=single,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Explicação Detalhada dos Cálculos do Simulador de Venturi}
+\author{Análise do Código \texttt{simulator.py}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Introdução}
+
+Este documento apresenta uma explicação detalhada de cada cálculo realizado na classe \texttt{VenturiSimulator}, implementada no arquivo \texttt{app\_modules/simulator.py}. O simulador implementa os cálculos necessários para analisar o comportamento de um medidor de vazão tipo Venturi, considerando tanto o caso ideal (sem atrito, sem perdas) quanto o caso real com perdas de carga e atrito.
+
+\subsection{Conceitos Fundamentais}
+
+Um medidor de Venturi é um dispositivo utilizado para medir a vazão de um fluido em um tubo. Ele consiste em:
+\begin{itemize}
+    \item Uma seção de entrada com diâmetro $D_1$
+    \item Uma garganta (seção estreita) com diâmetro $D_2 < D_1$
+    \item Um difusor de saída que reconduz o fluido ao diâmetro original
+\end{itemize}
+
+O princípio de funcionamento baseia-se na equação de Bernoulli e na conservação de massa, onde a diferença de pressão entre a entrada e a garganta está relacionada com a vazão do fluido.
+
+Este trabalho contempla os seguintes conteúdos fundamentais da mecânica dos fluidos:
+\begin{itemize}
+    \item Definição de fluido, formas de análise e descrição
+    \item Propriedades dos fluidos
+    \item Forças hidrostáticas e empuxo
+    \item Equações Básicas na Forma Integral para um Volume de Controle
+    \item Equação de Euler
+    \item Equação de Bernoulli
+    \item Escoamento em dutos
+\end{itemize}
+
+\section{Fundamentos Teóricos da Mecânica dos Fluidos}
+
+\subsection{Definição de Fluido, Formas de Análise e Descrição}
+
+\subsubsection{Definição de Fluido}
+
+Um \textbf{fluido} é uma substância que se deforma continuamente sob a ação de uma tensão de cisalhamento, por menor que seja. Diferentemente dos sólidos, os fluidos não resistem a deformações e assumem a forma do recipiente que os contém.
+
+Os fluidos podem ser classificados em:
+\begin{itemize}
+    \item \textbf{Líquidos:} Possuem volume definido, mas assumem a forma do recipiente. São praticamente incompressíveis.
+    \item \textbf{Gases:} Não possuem volume nem forma definidos. São compressíveis.
+\end{itemize}
+
+No simulador de Venturi, trabalhamos com fluidos \textbf{incompressíveis} (líquidos), onde a densidade $\rho$ é constante.
+
+\textbf{Aplicação no Código:} A densidade $\rho$ é um parâmetro de entrada do método \texttt{calcular()} (linha 9) e é utilizada em todos os cálculos de pressão e perdas de carga. Ver seção \ref{sec:estrutura} para detalhes.
+
+\subsubsection{Formas de Análise}
+
+Existem duas abordagens principais para descrever o escoamento de fluidos:
+
+\paragraph{Abordagem de Lagrange:}
+Descreve o movimento de partículas individuais do fluido ao longo do tempo. Cada partícula é identificada por sua posição inicial.
+
+\paragraph{Abordagem de Euler:}
+Descreve o campo de escoamento em pontos fixos do espaço. As propriedades do fluido (velocidade, pressão, densidade) são funções da posição e do tempo: $v(x,y,z,t)$, $P(x,y,z,t)$, $\rho(x,y,z,t)$.
+
+No simulador de Venturi, utilizamos a \textbf{abordagem de Euler}, analisando o escoamento em seções fixas do medidor (entrada, garganta, saída).
+
+\textbf{Aplicação no Código:} O simulador calcula propriedades (pressão, velocidade) em pontos fixos: seção 1 (entrada), seção 2 (garganta) e seção 3 (saída). As velocidades são calculadas nas linhas 31-32 do método \texttt{\_calcular\_desnivel\_de\_vazao()}.
+
+\subsubsection{Descrição do Escoamento}
+
+O escoamento pode ser classificado quanto a:
+\begin{itemize}
+    \item \textbf{Regime:} Permanente (propriedades não variam com o tempo) ou transiente
+    \item \textbf{Compressibilidade:} Incompressível ($\rho = \text{constante}$) ou compressível
+    \item \textbf{Viscosidade:} Viscoso (com atrito) ou invíscido (sem atrito)
+    \item \textbf{Rotacionalidade:} Rotacional ou irrotacional
+\end{itemize}
+
+No medidor Venturi, consideramos escoamento \textbf{permanente, incompressível} e analisamos tanto o caso \textbf{invíscido} (modo ideal) quanto \textbf{viscoso} (modo realista).
+
+\textbf{Aplicação no Código:} 
+\begin{itemize}
+    \item \textbf{Escoamento permanente:} As propriedades são calculadas uma única vez, assumindo regime permanente (método \texttt{calcular()}, linha 9).
+    \item \textbf{Incompressível:} A densidade $\rho$ é constante em todos os cálculos.
+    \item \textbf{Invíscido (modo ideal):} $k_{entrada} = 0$ e $f$ não é utilizado (linhas 34-37, 41-42).
+    \item \textbf{Viscoso (modo realista):} $k_{entrada} = 0.04$ e perdas por atrito são calculadas (linhas 44-45, 65-68).
+\end{itemize}
+
+\subsection{Propriedades dos Fluidos}
+
+As propriedades dos fluidos utilizadas no simulador são:
+
+\subsubsection{Densidade ($\rho$)}
+
+A densidade é a massa por unidade de volume:
+\begin{equation}
+\rho = \frac{m}{V} \quad \text{[kg/m³]}
+\end{equation}
+
+No simulador:
+\begin{itemize}
+    \item $\rho$: Densidade do fluido em escoamento (ex: água, $\rho = 1000$ kg/m³)
+    \item $\rho_m$: Densidade do fluido manométrico (ex: mercúrio, $\rho_m = 13600$ kg/m³)
+\end{itemize}
+
+A diferença de densidades ($\rho_m - \rho$) é fundamental para o funcionamento do manômetro diferencial.
+
+\textbf{Aplicação no Código:} A densidade $\rho$ é utilizada em:
+\begin{itemize}
+    \item Cálculo de pressões: linha 39, 52, 55, 57, 59
+    \item Cálculo de perdas: linhas 45, 58, 61
+    \item Cálculo do desnível manométrico: linha 63, onde $\Delta h = \frac{\Delta P}{(\rho_m - \rho) g}$
+    \item Cálculo do número de Reynolds: linha 71, $Re = \frac{\rho v D}{\mu}$
+\end{itemize}
+
+\subsubsection{Viscosidade Dinâmica ($\mu$)}
+
+A viscosidade dinâmica mede a resistência do fluido ao escoamento devido ao atrito interno:
+\begin{equation}
+\tau = \mu \frac{dv}{dy} \quad \text{[Pa·s]}
+\end{equation}
+
+onde $\tau$ é a tensão de cisalhamento e $dv/dy$ é o gradiente de velocidade.
+
+No simulador, $\mu$ é utilizada para calcular o número de Reynolds, que caracteriza o regime de escoamento (laminar, transição ou turbulento).
+
+\textbf{Aplicação no Código:} A viscosidade dinâmica $\mu$ é um parâmetro de entrada (linha 9) e é utilizada no método \texttt{calcular\_reynolds()} (linha 71) para calcular $Re = \frac{\rho v_1 D_1}{\mu}$. Ver seção \ref{sec:reynolds} para detalhes.
+
+\subsubsection{Viscosidade Cinemática ($\nu$)}
+
+Relacionada à viscosidade dinâmica pela densidade:
+\begin{equation}
+\nu = \frac{\mu}{\rho} \quad \text{[m²/s]}
+\end{equation}
+
+\subsubsection{Pressão ($P$)}
+
+A pressão é a força por unidade de área exercida pelo fluido:
+\begin{equation}
+P = \frac{F}{A} \quad \text{[Pa = N/m²]}
+\end{equation}
+
+No medidor Venturi, medimos diferenças de pressão entre seções para determinar a vazão.
+
+\textbf{Aplicação no Código:} As pressões são calculadas em:
+\begin{itemize}
+    \item $P_1$: Parâmetro de entrada (linha 9)
+    \item $P_2$: Calculada na linha 39 usando Bernoulli
+    \item $P_{2,fim}$: Calculada na linha 47 após considerar perdas
+    \item $P_3$: Calculada na linha 52 (ideal) ou 58 (realista)
+    \item $\Delta P$: Calculada na linha 49
+\end{itemize}
+
+\subsection{Forças Hidrostáticas e Empuxo}
+
+\subsubsection{Forças Hidrostáticas}
+
+Em um fluido em repouso, a pressão varia com a profundidade segundo:
+\begin{equation}
+P = P_0 + \rho g h
+\end{equation}
+
+onde:
+\begin{itemize}
+    \item $P_0$ é a pressão na superfície livre
+    \item $\rho$ é a densidade do fluido
+    \item $g$ é a aceleração da gravidade
+    \item $h$ é a profundidade
+\end{itemize}
+
+\subsubsection{Empuxo}
+
+O princípio de Arquimedes estabelece que um corpo imerso em um fluido sofre uma força de empuxo igual ao peso do fluido deslocado:
+\begin{equation}
+F_E = \rho g V_{deslocado}
+\end{equation}
+
+\subsubsection{Aplicação no Medidor Venturi}
+
+No manômetro diferencial do Venturi, utilizamos o princípio hidrostático:
+\begin{equation}
+\Delta P = (\rho_m - \rho) g \Delta h
+\end{equation}
+
+onde $\Delta h$ é a diferença de altura no manômetro. Esta relação conecta a diferença de pressão dinâmica (devido ao escoamento) com a diferença de altura estática (no manômetro).
+
+\textbf{Aplicação no Código:} O princípio hidrostático é aplicado na linha 63 do método \texttt{\_calcular\_desnivel\_de\_vazao()}:
+\begin{equation}
+\Delta h = \frac{\Delta P}{(\rho_m - \rho) g}
+\end{equation}
+Esta é a fórmula inversa da equação hidrostática, permitindo calcular o desnível manométrico a partir da diferença de pressão dinâmica.
+
+\subsection{Equações Básicas na Forma Integral para um Volume de Controle}
+
+As equações fundamentais da mecânica dos fluidos podem ser expressas na forma integral para um volume de controle:
+
+\subsubsection{Conservação de Massa (Equação da Continuidade)}
+
+Para um volume de controle fixo:
+\begin{equation}
+\frac{\partial}{\partial t} \iiint_{VC} \rho \, dV + \oiint_{SC} \rho \vec{v} \cdot \vec{n} \, dA = 0
+\end{equation}
+
+Para escoamento permanente e incompressível, simplifica-se para:
+\begin{equation}
+\oiint_{SC} \vec{v} \cdot \vec{n} \, dA = 0
+\end{equation}
+
+Aplicada ao medidor Venturi (seções 1 e 2):
+\begin{equation}
+v_1 A_1 = v_2 A_2 = Q = \text{constante}
+\end{equation}
+
+Esta é a equação da continuidade utilizada no simulador para calcular as velocidades.
+
+\textbf{Aplicação no Código:} A equação da continuidade é aplicada diretamente nas linhas 31-32:
+\begin{lstlisting}[firstnumber=31]
+self.v1 = self.Q / self.A1
+self.v2 = self.Q / self.A2
+\end{lstlisting}
+Estas linhas implementam $v_1 = Q/A_1$ e $v_2 = Q/A_2$, garantindo que $v_1 A_1 = v_2 A_2 = Q$ (conservação de massa). Ver seção \ref{sec:continuidade} para derivação completa.
+
+\subsubsection{Conservação de Quantidade de Movimento}
+
+Para um volume de controle:
+\begin{equation}
+\frac{\partial}{\partial t} \iiint_{VC} \rho \vec{v} \, dV + \oiint_{SC} \rho \vec{v} (\vec{v} \cdot \vec{n}) \, dA = \sum \vec{F}
+\end{equation}
+
+No medidor Venturi, esta equação explica as forças exercidas pelo fluido nas paredes do dispositivo.
+
+\textbf{Aplicação no Código:} Embora não seja calculada explicitamente, a conservação de quantidade de movimento está implícita no cálculo das pressões. As forças de pressão nas paredes do Venturi são responsáveis pelas mudanças de direção do escoamento e pelas perdas de carga.
+
+\subsubsection{Conservação de Energia (Primeira Lei da Termodinâmica)}
+
+Para um volume de controle:
+\begin{equation}
+\frac{\partial}{\partial t} \iiint_{VC} \rho e \, dV + \oiint_{SC} \rho e (\vec{v} \cdot \vec{n}) \, dA = \dot{Q} - \dot{W}
+\end{equation}
+
+onde $e$ é a energia específica total (interna + cinética + potencial).
+
+\subsection{Equação de Euler}
+
+A equação de Euler descreve o movimento de um fluido invíscido (sem viscosidade). Para um fluido incompressível, em coordenadas cartesianas:
+\begin{equation}
+\frac{\partial \vec{v}}{\partial t} + (\vec{v} \cdot \nabla) \vec{v} = -\frac{1}{\rho} \nabla P + \vec{g}
+\end{equation}
+
+ou, na forma vetorial:
+\begin{equation}
+\frac{D\vec{v}}{Dt} = -\frac{1}{\rho} \nabla P + \vec{g}
+\end{equation}
+
+onde $\frac{D}{Dt}$ é a derivada material (derivada total).
+
+\subsubsection{Integração da Equação de Euler - Equação de Bernoulli}
+
+Integrando a equação de Euler ao longo de uma linha de corrente, para escoamento permanente e incompressível, obtemos a \textbf{equação de Bernoulli}:
+\begin{equation}
+P + \frac{1}{2}\rho v^2 + \rho g z = \text{constante}
+\end{equation}
+
+ou, entre dois pontos na mesma linha de corrente:
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 + \rho g z_1 = P_2 + \frac{1}{2}\rho v_2^2 + \rho g z_2
+\end{equation}
+
+Esta é a base teórica para os cálculos de pressão no medidor Venturi.
+
+\textbf{Aplicação no Código:} A equação de Euler integrada resulta na equação de Bernoulli, que é aplicada na linha 39 para calcular $P_2$:
+\begin{lstlisting}[firstnumber=39]
+self.P2 = self.P1 - 0.5 * self.rho * ((self.v2**2 * (1 + k_entrada)) - self.v1**2)
+\end{lstlisting}
+Esta linha implementa a forma modificada de Bernoulli: $P_2 = P_1 - \frac{1}{2}\rho \left[v_2^2(1 + k_{entrada}) - v_1^2\right]$. Ver seção \ref{sec:bernoulli} para derivação completa.
+
+\subsection{Equação de Bernoulli}
+\label{sec:bernoulli}
+
+A equação de Bernoulli é uma das equações mais importantes da mecânica dos fluidos e é fundamental para o funcionamento do medidor Venturi.
+
+\subsubsection{Forma Geral}
+
+Para escoamento permanente, incompressível e invíscido ao longo de uma linha de corrente:
+\begin{equation}
+P + \frac{1}{2}\rho v^2 + \rho g z = \text{constante}
+\end{equation}
+
+onde cada termo representa:
+\begin{itemize}
+    \item $P$: Pressão estática (energia de pressão por unidade de volume)
+    \item $\frac{1}{2}\rho v^2$: Pressão dinâmica (energia cinética por unidade de volume)
+    \item $\rho g z$: Pressão hidrostática (energia potencial por unidade de volume)
+\end{itemize}
+
+\subsubsection{Forma Simplificada para Tubo Horizontal}
+
+Quando $z_1 = z_2$ (tubo horizontal):
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2
+\end{equation}
+
+Esta é a forma utilizada no medidor Venturi, onde a diferença de pressão está relacionada à diferença de velocidades.
+
+\textbf{Aplicação no Código:} A equação de Bernoulli simplificada é a base do cálculo de $P_2$ (linha 39). No modo ideal ($k_{entrada} = 0$), temos exatamente $P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2$. Ver simulação Caso 1 (seção \ref{sec:simulacao1}) para exemplo numérico.
+
+\subsubsection{Equação de Bernoulli Modificada (com Perdas)}
+
+Para escoamento real (com perdas), a equação de Bernoulli é modificada:
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2 + \Delta P_{perdas}
+\end{equation}
+
+No simulador, as perdas são modeladas como:
+\begin{equation}
+\Delta P_{perdas} = k \cdot \frac{1}{2}\rho v^2
+\end{equation}
+
+onde $k$ é um coeficiente de perda que depende da geometria e das condições do escoamento.
+
+\textbf{Aplicação no Código:} A equação de Bernoulli modificada é aplicada em:
+\begin{itemize}
+    \item \textbf{Linha 39:} Cálculo de $P_2$ com perda na entrada ($k_{entrada}$)
+    \item \textbf{Linha 55:} Recuperação dinâmica: $\Delta P_{recuperacao} = \frac{1}{2}\rho(v_2^2 - v_1^2)$
+    \item \textbf{Linha 57:} Perda no difusor: $\Delta P_{difusor} = K_{difusor} \cdot \frac{1}{2}\rho v_2^2$
+    \item \textbf{Linha 58:} Pressão na saída: $P_3 = P_{2,fim} + \Delta P_{recuperacao} - \Delta P_{difusor}$
+\end{itemize}
+Ver seção \ref{sec:bernoulli} para derivação completa e seção \ref{sec:simulacoes} para exemplos numéricos.
+
+\subsection{Escoamento em Dutos}
+
+\subsubsection{Características do Escoamento em Dutos}
+
+O escoamento em dutos (tubos) é caracterizado por:
+\begin{itemize}
+    \item Escoamento confinado (limitado pelas paredes)
+    \item Perdas de carga devido ao atrito nas paredes
+    \item Distribuição de velocidade não uniforme (perfil de velocidade)
+    \item Regimes de escoamento: laminar, transição ou turbulento
+\end{itemize}
+
+\subsubsection{Perdas de Carga em Dutos}
+
+\paragraph{Perdas por Atrito (Distribuídas)}
+
+A equação de Darcy-Weisbach relaciona a perda de carga por atrito com as propriedades do escoamento:
+\begin{equation}
+h_f = f \frac{L}{D} \frac{v^2}{2g}
+\end{equation}
+
+onde:
+\begin{itemize}
+    \item $f$ é o fator de atrito de Darcy-Weisbach
+    \item $L$ é o comprimento do trecho
+    \item $D$ é o diâmetro hidráulico
+    \item $v$ é a velocidade média
+    \item $g$ é a aceleração da gravidade
+\end{itemize}
+
+Esta equação é utilizada no simulador para calcular as perdas na garganta do Venturi.
+
+\textbf{Aplicação no Código:} A equação de Darcy-Weisbach é implementada no método \texttt{\_calcular\_perda\_carga\_garganta()} (linhas 65-68):
+\begin{lstlisting}[firstnumber=65]
+def _calcular_perda_carga_garganta(self):
+    h_f_garganta = self.f * (self.L_garganta / self.D2) * (self.v2**2 / (2 * self.g))
+    return h_f_garganta
+\end{lstlisting}
+Este método calcula $h_{f,garganta} = f \frac{L_{garganta}}{D_2} \frac{v_2^2}{2g}$, que é convertido para pressão na linha 45: $\Delta P_{garganta} = h_{f,garganta} \cdot \rho \cdot g$. Ver seção \ref{sec:perda_garganta} para detalhes.
+
+\paragraph{Perdas Localizadas (Singulares)}
+
+Perdas devido a mudanças de geometria (curvas, válvulas, contrações, expansões):
+\begin{equation}
+h_L = K \frac{v^2}{2g}
+\end{equation}
+
+onde $K$ é o coeficiente de perda localizada.
+
+No medidor Venturi, temos perdas localizadas na:
+\begin{itemize}
+    \item Entrada (coeficiente $k_{entrada}$)
+    \item Difusor (coeficiente $K_{difusor}$)
+\end{itemize}
+
+\textbf{Aplicação no Código:}
+\begin{itemize}
+    \item \textbf{Perda na entrada:} Coeficiente $k_{entrada}$ definido nas linhas 34-37 (0.0 no modo ideal, 0.04 no modo realista). Aplicado na linha 39 no cálculo de $P_2$ e calculada explicitamente na linha 59: $\Delta P_{entrada} = k_{entrada} \cdot \frac{1}{2}\rho v_2^2$.
+    \item \textbf{Perda no difusor:} Coeficiente $K_{difusor}$ calculado no método \texttt{\_obter\_k\_difusor\_15\_graus()} (linhas 98-115) e aplicado na linha 57: $\Delta P_{difusor} = K_{difusor} \cdot \frac{1}{2}\rho v_2^2$.
+\end{itemize}
+Ver seção \ref{sec:difusor} para detalhes do cálculo de $K_{difusor}$.
+
+\subsubsection{Número de Reynolds}
+
+O número de Reynolds caracteriza o regime de escoamento:
+\begin{equation}
+Re = \frac{\rho v D}{\mu} = \frac{v D}{\nu}
+\end{equation}
+
+Classificação:
+\begin{itemize}
+    \item $Re < 2300$: Escoamento laminar
+    \item $2300 < Re < 4000$: Escoamento de transição
+    \item $Re > 4000$: Escoamento turbulento
+\end{itemize}
+
+No simulador, o número de Reynolds é calculado para caracterizar o regime de escoamento.
+
+\textbf{Aplicação no Código:} O número de Reynolds é calculado no método \texttt{calcular\_reynolds()} (linhas 70-72):
+\begin{lstlisting}[firstnumber=70]
+def calcular_reynolds(self):
+    Re = (self.rho * self.v1 * self.D1) / self.mu
+    return Re
+\end{lstlisting}
+Este método implementa $Re = \frac{\rho v_1 D_1}{\mu}$, utilizando a velocidade e diâmetro da entrada. O resultado indica se o escoamento é laminar ($Re < 2300$), de transição ($2300 < Re < 4000$) ou turbulento ($Re > 4000$). Ver seção \ref{sec:reynolds} e simulações (seção \ref{sec:simulacoes}) para exemplos.
+
+\subsubsection{Perfil de Velocidade}
+
+Em escoamento laminar em duto circular, o perfil de velocidade é parabólico:
+\begin{equation}
+v(r) = v_{max} \left(1 - \frac{r^2}{R^2}\right)
+\end{equation}
+
+Em escoamento turbulento, o perfil é mais achatado próximo ao centro.
+
+No medidor Venturi, utilizamos a \textbf{velocidade média} $v = Q/A$ para os cálculos.
+
+\textbf{Aplicação no Código:} A velocidade média é calculada nas linhas 31-32 usando a equação da continuidade:
+\begin{lstlisting}[firstnumber=31]
+self.v1 = self.Q / self.A1
+self.v2 = self.Q / self.A2
+\end{lstlisting}
+Estas velocidades médias são utilizadas em todos os cálculos subsequentes:
+\begin{itemize}
+    \item Cálculo de pressões (linha 39)
+    \item Cálculo de perdas (linhas 44, 55, 57, 59)
+    \item Cálculo do número de Reynolds (linha 71)
+\end{itemize}
+A utilização da velocidade média é uma aproximação válida para escoamento turbulento desenvolvido, que é o caso típico em medidores Venturi.
+
+\section{Estrutura da Classe}
+\label{sec:estrutura}
+
+\subsection{Método \texttt{\_\_init\_\_}}
+
+\begin{lstlisting}[firstnumber=6]
+def __init__(self):
+    self.g = 9.81
+\end{lstlisting}
+
+\textbf{Linha 7:} Inicialização da aceleração da gravidade
+\begin{itemize}
+    \item \texttt{self.g = 9.81}: Define a constante gravitacional $g = 9.81$ m/s², utilizada em todos os cálculos que envolvem energia potencial e perdas de carga expressas em altura.
+    \item Esta constante é fundamental para converter pressões em alturas manométricas e vice-versa através da relação $P = \rho g h$.
+\end{itemize}
+
+\subsection{Método \texttt{calcular}}
+
+Este é o método principal que recebe todos os parâmetros de entrada e realiza os cálculos principais.
+
+\subsubsection{Parâmetros de Entrada}
+
+\begin{lstlisting}[firstnumber=9]
+def calcular(self, D1, D2, L_garganta, rho, rho_m, Q, delta_h, f, Cd, mode, mu, P1):
+\end{lstlisting}
+
+\begin{itemize}
+    \item \texttt{D1}: Diâmetro da seção de entrada (m)
+    \item \texttt{D2}: Diâmetro da garganta (m)
+    \item \texttt{L\_garganta}: Comprimento da garganta (m)
+    \item \texttt{rho}: Densidade do fluido em escoamento (kg/m³)
+    \item \texttt{rho\_m}: Densidade do fluido manométrico (kg/m³)
+    \item \texttt{Q}: Vazão volumétrica (m³/s)
+    \item \texttt{delta\_h}: Diferença de altura no manômetro (m)
+    \item \texttt{f}: Fator de atrito de Darcy-Weisbach (adimensional)
+    \item \texttt{Cd}: Coeficiente de descarga (adimensional)
+    \item \texttt{mode}: Modo de operação ('Ideal' ou 'Real')
+    \item \texttt{mu}: Viscosidade dinâmica do fluido (Pa·s)
+    \item \texttt{P1}: Pressão na seção de entrada (Pa)
+\end{itemize}
+
+\subsubsection{Atribuição de Variáveis}
+
+\begin{lstlisting}[firstnumber=10]
+self.D1 = D1
+self.D2 = D2
+self.L_garganta = L_garganta
+self.rho = rho
+self.rho_m = rho_m
+self.Q = Q
+self.delta_h = delta_h
+self.f = f
+self.Cd = Cd
+self.mode = mode
+self.mu = mu
+self.P1 = P1
+\end{lstlisting}
+
+\textbf{Linhas 10-21:} Armazenamento dos parâmetros de entrada como atributos da classe para uso posterior nos cálculos.
+
+\subsubsection{Cálculo das Áreas das Seções}
+
+\begin{lstlisting}[firstnumber=23]
+self.A1 = np.pi * (self.D1 / 2) ** 2
+self.A2 = np.pi * (self.D2 / 2) ** 2
+\end{lstlisting}
+
+\textbf{Linha 23:} Cálculo da área da seção de entrada
+\begin{equation}
+A_1 = \pi \left(\frac{D_1}{2}\right)^2 = \frac{\pi D_1^2}{4}
+\end{equation}
+onde $A_1$ é a área da seção transversal circular de entrada.
+
+\textbf{Linha 24:} Cálculo da área da garganta
+\begin{equation}
+A_2 = \pi \left(\frac{D_2}{2}\right)^2 = \frac{\pi D_2^2}{4}
+\end{equation}
+onde $A_2$ é a área da seção transversal circular da garganta.
+
+\subsubsection{Chamadas de Métodos Auxiliares}
+
+\begin{lstlisting}[firstnumber=26]
+self._calcular_geometria_automatica()
+self._calcular_desnivel_de_vazao()
+\end{lstlisting}
+
+\textbf{Linha 26:} Calcula automaticamente as dimensões geométricas do Venturi (comprimentos de entrada e saída).
+
+\textbf{Linha 28:} Realiza o cálculo principal do desnível e das pressões ao longo do medidor.
+
+\section{Cálculo do Desnível e Vazão}
+
+\subsection{Método \texttt{\_calcular\_desnivel\_de\_vazao}}
+
+Este método implementa a equação de Bernoulli modificada para calcular as pressões e perdas ao longo do medidor Venturi.
+
+\subsubsection{Cálculo das Velocidades - Equação da Continuidade}
+\label{sec:continuidade}
+
+As velocidades nas seções 1 e 2 são calculadas utilizando a equação da continuidade. Vamos derivar e explicar esta equação fundamental:
+
+\paragraph{Derivação da Equação da Continuidade}
+
+A equação da continuidade é uma consequência direta do princípio de conservação de massa. Para um escoamento permanente e incompressível em um tubo, a massa que entra em uma seção deve ser igual à massa que sai.
+
+\subparagraph{Passo 1: Conservação de Massa}
+
+Para um volume de controle entre as seções 1 e 2, a taxa de massa que entra deve ser igual à taxa de massa que sai:
+\begin{equation}
+\dot{m}_1 = \dot{m}_2
+\end{equation}
+
+onde $\dot{m}$ é a vazão mássica (kg/s).
+
+\subparagraph{Passo 2: Relação entre Vazão Mássica e Vazão Volumétrica}
+
+A vazão mássica é relacionada à vazão volumétrica através da densidade:
+\begin{equation}
+\dot{m} = \rho Q = \rho v A
+\end{equation}
+
+onde:
+\begin{itemize}
+    \item $\rho$ é a densidade do fluido (kg/m³)
+    \item $Q$ é a vazão volumétrica (m³/s)
+    \item $v$ é a velocidade média na seção (m/s)
+    \item $A$ é a área da seção transversal (m²)
+\end{itemize}
+
+\subparagraph{Passo 3: Aplicação da Conservação de Massa}
+
+Aplicando a conservação de massa entre as seções 1 e 2:
+\begin{equation}
+\rho_1 v_1 A_1 = \rho_2 v_2 A_2
+\end{equation}
+
+\subparagraph{Passo 4: Simplificação para Fluido Incompressível}
+
+Para um fluido incompressível, a densidade é constante ($\rho_1 = \rho_2 = \rho$), então:
+\begin{equation}
+\rho v_1 A_1 = \rho v_2 A_2
+\end{equation}
+
+Cancelando a densidade:
+\begin{equation}
+v_1 A_1 = v_2 A_2
+\end{equation}
+
+\subparagraph{Passo 5: Definição da Vazão Volumétrica}
+
+A vazão volumétrica $Q$ é definida como:
+\begin{equation}
+Q = v A
+\end{equation}
+
+Como a vazão volumétrica é constante (conservação de massa), temos:
+\begin{equation}
+Q = v_1 A_1 = v_2 A_2 = \text{constante}
+\end{equation}
+
+\subparagraph{Passo 6: Isolamento das Velocidades}
+
+Isolando as velocidades:
+\begin{align}
+v_1 &= \frac{Q}{A_1} \label{eq:v1} \\
+v_2 &= \frac{Q}{A_2} \label{eq:v2}
+\end{align}
+
+Estas são as fórmulas utilizadas no código!
+
+\paragraph{Aplicação no Código}
+
+\begin{lstlisting}[firstnumber=31]
+self.v1 = self.Q / self.A1
+self.v2 = self.Q / self.A2
+\end{lstlisting}
+
+\textbf{Linha 31:} Velocidade média na seção de entrada
+\begin{equation}
+v_1 = \frac{Q}{A_1}
+\end{equation}
+
+\textbf{Linha 32:} Velocidade média na garganta
+\begin{equation}
+v_2 = \frac{Q}{A_2}
+\end{equation}
+
+\paragraph{Interpretação Física}
+
+\begin{itemize}
+    \item Como $A_2 < A_1$ (a garganta é mais estreita), temos que $v_2 > v_1$, conforme esperado pela conservação de massa.
+    \item A velocidade aumenta na garganta para manter a vazão constante.
+    \item A relação entre as velocidades é inversamente proporcional às áreas:
+    \begin{equation}
+    \frac{v_2}{v_1} = \frac{A_1}{A_2} = \left(\frac{D_1}{D_2}\right)^2
+    \end{equation}
+    \item Para um Venturi com $D_1 = 2D_2$, temos $v_2 = 4v_1$ (a velocidade quadruplica na garganta).
+\end{itemize}
+
+\paragraph{Exemplo Numérico}
+
+Para o Caso 1 (modo ideal):
+\begin{align*}
+    A_1 &= \pi \left(\frac{0.1}{2}\right)^2 = 0.007854 \text{ m}^2 \\
+    A_2 &= \pi \left(\frac{0.05}{2}\right)^2 = 0.001963 \text{ m}^2 \\
+    Q &= 0.01 \text{ m}^3/\text{s} \\
+    v_1 &= \frac{Q}{A_1} = \frac{0.01}{0.007854} = 1.2732 \text{ m/s} \\
+    v_2 &= \frac{Q}{A_2} = \frac{0.01}{0.001963} = 5.0930 \text{ m/s}
+\end{align*}
+
+Verificando a conservação de massa:
+\begin{align*}
+    v_1 A_1 &= 1.2732 \times 0.007854 = 0.01 \text{ m}^3/\text{s} = Q \\
+    v_2 A_2 &= 5.0930 \times 0.001963 = 0.01 \text{ m}^3/\text{s} = Q \\
+    v_1 A_1 &= v_2 A_2 = Q \quad \checkmark
+\end{align*}
+
+A relação entre velocidades:
+\begin{equation}
+\frac{v_2}{v_1} = \frac{5.0930}{1.2732} = 4.0 = \left(\frac{D_1}{D_2}\right)^2 = \left(\frac{0.1}{0.05}\right)^2 = 4.0 \quad \checkmark
+\end{equation}
+
+\subsubsection{Coeficiente de Perda de Entrada}
+
+\begin{lstlisting}[firstnumber=34]
+if self.mode == 'Ideal':
+    k_entrada = 0.0
+else:
+    k_entrada = 0.04
+\end{lstlisting}
+
+\textbf{Linhas 34-37:} Determinação do coeficiente de perda de carga na entrada
+\begin{itemize}
+    \item \textbf{Modo Ideal:} $k_{entrada} = 0$ (sem perdas, sem atrito)
+    \item \textbf{Modo Real:} $k_{entrada} = 0.04$ (perda típica para entrada bem projetada, considerando atrito e outras dissipações)
+\end{itemize}
+O coeficiente $k$ relaciona a perda de pressão com a pressão dinâmica: $\Delta P = k \cdot \frac{1}{2}\rho v^2$. No modo ideal, este coeficiente é zero pois não há atrito nem outras perdas.
+
+\subsubsection{Cálculo da Pressão na Garganta (antes das perdas)}
+
+\begin{lstlisting}[firstnumber=39]
+self.P2 = self.P1 - 0.5 * self.rho * ((self.v2**2 * (1 + k_entrada)) - self.v1**2)
+\end{lstlisting}
+
+\textbf{Linha 39:} Aplicação da equação de Bernoulli modificada para calcular $P_2$
+
+\paragraph{Derivação Passo a Passo da Fórmula de $P_2$}
+
+A derivação parte da equação de Bernoulli, que relaciona pressão, velocidade e altura em um escoamento de fluido. Vamos mostrar cada passo:
+
+\subparagraph{Passo 1: Equação de Bernoulli Original}
+
+A equação de Bernoulli para um fluido incompressível em escoamento permanente, sem atrito, entre dois pontos 1 e 2 na mesma linha de corrente é:
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 + \rho g z_1 = P_2 + \frac{1}{2}\rho v_2^2 + \rho g z_2
+\end{equation}
+
+onde:
+\begin{itemize}
+    \item $P$ é a pressão estática
+    \item $\rho$ é a densidade do fluido
+    \item $v$ é a velocidade do fluido
+    \item $g$ é a aceleração da gravidade
+    \item $z$ é a altura em relação a um referencial
+\end{itemize}
+
+\subparagraph{Passo 2: Simplificação para Tubo Horizontal}
+
+Como o medidor Venturi é tipicamente instalado horizontalmente, podemos assumir que $z_1 = z_2$ (mesma altura). Portanto, os termos de energia potencial se cancelam:
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2
+\end{equation}
+
+\subparagraph{Passo 3: Inclusão de Perdas na Entrada (Modo Realista)}
+
+No caso real, há perdas de energia devido ao atrito e às mudanças de geometria. A perda na entrada pode ser modelada como uma fração da pressão dinâmica na garganta:
+\begin{equation}
+\Delta P_{entrada} = k_{entrada} \cdot \frac{1}{2}\rho v_2^2
+\end{equation}
+
+onde $k_{entrada}$ é o coeficiente de perda na entrada.
+
+No modo ideal, $k_{entrada} = 0$ (sem perdas). No modo realista, $k_{entrada} = 0.04$ (perda típica).
+
+A equação de Bernoulli modificada, incluindo a perda na entrada, fica:
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2 + \Delta P_{entrada}
+\end{equation}
+
+\subparagraph{Passo 4: Substituição da Perda na Entrada}
+
+Substituindo a expressão da perda na entrada:
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2 + k_{entrada} \cdot \frac{1}{2}\rho v_2^2
+\end{equation}
+
+Fatorando o termo $\frac{1}{2}\rho v_2^2$:
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2 (1 + k_{entrada})
+\end{equation}
+
+\subparagraph{Passo 5: Isolamento de $P_2$}
+
+Para isolar $P_2$, subtraímos $\frac{1}{2}\rho v_2^2 (1 + k_{entrada})$ de ambos os lados:
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 - \frac{1}{2}\rho v_2^2 (1 + k_{entrada}) = P_2
+\end{equation}
+
+Reorganizando os termos:
+\begin{equation}
+P_2 = P_1 + \frac{1}{2}\rho v_1^2 - \frac{1}{2}\rho v_2^2 (1 + k_{entrada})
+\end{equation}
+
+\subparagraph{Passo 6: Fatoração Final}
+
+Fatorando $\frac{1}{2}\rho$:
+\begin{equation}
+P_2 = P_1 - \frac{1}{2}\rho \left[v_2^2(1 + k_{entrada}) - v_1^2\right]
+\end{equation}
+
+Esta é a fórmula final utilizada no código!
+
+\subparagraph{Interpretação Física}
+
+A fórmula mostra que:
+\begin{itemize}
+    \item $P_2$ é menor que $P_1$ (o termo subtraído é positivo, pois $v_2 > v_1$)
+    \item A diferença de pressão depende do quadrado das velocidades
+    \item No modo ideal ($k_{entrada} = 0$), a fórmula se simplifica para:
+    \begin{equation}
+    P_2 = P_1 - \frac{1}{2}\rho (v_2^2 - v_1^2)
+    \end{equation}
+    \item No modo realista ($k_{entrada} > 0$), a perda adicional na entrada aumenta ainda mais a diferença de pressão
+\end{itemize}
+
+\paragraph{Exemplo Numérico (Modo Ideal)}
+
+Para ilustrar com valores do Caso 1:
+\begin{align*}
+P_2 &= P_1 - \frac{1}{2}\rho \left[v_2^2(1 + k_{entrada}) - v_1^2\right] \\
+P_2 &= 101325 - \frac{1}{2} \cdot 1000 \left[(5.0930)^2 \cdot (1 + 0.0) - (1.2732)^2\right] \\
+P_2 &= 101325 - \frac{1}{2} \cdot 1000 \left[25.939 - 1.621\right] \\
+P_2 &= 101325 - \frac{1}{2} \cdot 1000 \cdot 24.318 \\
+P_2 &= 101325 - 12158.54 \\
+P_2 &= 89166.46 \text{ Pa}
+\end{align*}
+
+Esta pressão representa a pressão teórica na garganta. No modo ideal, não há perdas por atrito, então esta é a pressão final. No modo realista, ainda será subtraída a perda por atrito na garganta.
+
+\subsubsection{Cálculo das Perdas na Garganta}
+
+\begin{lstlisting}[firstnumber=41]
+if self.mode == 'Ideal':
+    perda_garganta_Pa = 0.0
+else:
+    h_f_garganta = self._calcular_perda_carga_garganta()
+    perda_garganta_Pa = h_f_garganta * self.rho * self.g
+\end{lstlisting}
+
+\textbf{Linhas 41-45:} Cálculo das perdas de carga na garganta
+
+\begin{itemize}
+    \item \textbf{Modo Ideal:} Sem perdas por atrito ($h_{f,garganta} = 0$). No modo ideal, não há atrito, portanto o fator de atrito $f$ não é utilizado e não há perdas de carga.
+    \item \textbf{Modo Real:} 
+    \begin{itemize}
+        \item \textbf{Linha 44:} Calcula a perda de carga em altura (m) através do método auxiliar, que utiliza o fator de atrito $f$
+        \item \textbf{Linha 45:} Converte a perda de altura em pressão (Pa):
+        \begin{equation}
+        \Delta P_{garganta} = h_{f,garganta} \cdot \rho \cdot g
+        \end{equation}
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Pressão Final na Garganta}
+
+\begin{lstlisting}[firstnumber=47]
+self.P2_fim = self.P2 - perda_garganta_Pa
+\end{lstlisting}
+
+\textbf{Linha 47:} Pressão real na saída da garganta
+\begin{equation}
+P_{2,fim} = P_2 - \Delta P_{garganta}
+\end{equation}
+Esta é a pressão efetiva após considerar as perdas por atrito na garganta. No modo ideal, $P_{2,fim} = P_2$ pois não há perdas.
+
+\subsubsection{Diferença de Pressão}
+
+\begin{lstlisting}[firstnumber=49]
+self.delta_P = self.P1 - self.P2
+\end{lstlisting}
+
+\textbf{Linha 49:} Diferença de pressão entre entrada e garganta (antes das perdas na garganta)
+\begin{equation}
+\Delta P = P_1 - P_2
+\end{equation}
+Esta diferença é utilizada para calcular o desnível manométrico.
+
+\subsubsection{Cálculo da Pressão na Saída}
+
+\begin{lstlisting}[firstnumber=51]
+if self.mode == 'Ideal':
+    self.P3 = self.P1 
+    self.h_L = 0.0
+else:
+    recuperacao_dinamica = 0.5 * self.rho * (self.v2**2 - self.v1**2)
+    K_difusor = self._obter_k_difusor_15_graus()
+    perda_difusor_Pa = K_difusor * (0.5 * self.rho * self.v2**2)
+    self.P3 = self.P2_fim + recuperacao_dinamica - perda_difusor_Pa
+    perda_entrada_Pa = k_entrada * (0.5 * self.rho * self.v2**2)
+    perda_total_Pa = perda_entrada_Pa + perda_garganta_Pa + perda_difusor_Pa
+    self.h_L = perda_total_Pa / (self.rho * self.g)
+\end{lstlisting}
+
+\textbf{Linhas 51-61:} Cálculo da pressão na seção de saída ($P_3$)
+
+\paragraph{Modo Ideal (linhas 51-53):}
+\begin{itemize}
+    \item \textbf{Linha 52:} $P_3 = P_1$ (recuperação total de pressão, sem perdas por atrito ou outras dissipações)
+    \item \textbf{Linha 53:} $h_L = 0$ (perda de carga total nula, pois não há atrito no modo ideal)
+\end{itemize}
+
+\paragraph{Modo Real (linhas 54-61):}
+
+\textbf{Linha 55:} Recuperação dinâmica de pressão
+\begin{equation}
+\Delta P_{recuperacao} = \frac{1}{2}\rho(v_2^2 - v_1^2)
+\end{equation}
+Quando o fluido desacelera no difusor (de $v_2$ para $v_1$), parte da energia cinética é convertida em pressão estática.
+
+\textbf{Linha 56:} Obtém o coeficiente de perda do difusor através de método auxiliar.
+
+\textbf{Linha 57:} Perda de pressão no difusor
+\begin{equation}
+\Delta P_{difusor} = K_{difusor} \cdot \frac{1}{2}\rho v_2^2
+\end{equation}
+O coeficiente $K_{difusor}$ depende da geometria do difusor e da razão de áreas.
+
+\textbf{Linha 58:} Pressão final na saída
+\begin{equation}
+P_3 = P_{2,fim} + \Delta P_{recuperacao} - \Delta P_{difusor}
+\end{equation}
+A pressão na saída é a pressão na garganta, mais a recuperação dinâmica, menos as perdas no difusor.
+
+\textbf{Linha 59:} Perda de pressão na entrada
+\begin{equation}
+\Delta P_{entrada} = k_{entrada} \cdot \frac{1}{2}\rho v_2^2
+\end{equation}
+
+\textbf{Linha 60:} Perda de pressão total
+\begin{equation}
+\Delta P_{total} = \Delta P_{entrada} + \Delta P_{garganta} + \Delta P_{difusor}
+\end{equation}
+
+\textbf{Linha 61:} Perda de carga total em altura
+\begin{equation}
+h_L = \frac{\Delta P_{total}}{\rho g}
+\end{equation}
+Conversão da perda de pressão total para altura equivalente.
+
+\subsubsection{Cálculo do Desnível Manométrico}
+
+\begin{lstlisting}[firstnumber=63]
+self.delta_h = self.delta_P / ((self.rho_m - self.rho) * self.g)
+\end{lstlisting}
+
+\textbf{Linha 63:} Cálculo do desnível no manômetro diferencial
+
+A equação do manômetro diferencial relaciona a diferença de pressão com a diferença de altura:
+\begin{equation}
+\Delta P = (\rho_m - \rho) g \Delta h
+\end{equation}
+
+Rearranjando para isolar $\Delta h$:
+\begin{equation}
+\Delta h = \frac{\Delta P}{(\rho_m - \rho) g}
+\end{equation}
+
+onde:
+\begin{itemize}
+    \item $\rho_m$ é a densidade do fluido manométrico
+    \item $\rho$ é a densidade do fluido em escoamento
+    \item A diferença $(\rho_m - \rho)$ garante que o manômetro funcione corretamente
+\end{itemize}
+
+\section{Cálculo da Perda de Carga na Garganta}
+\label{sec:perda_garganta}
+
+\subsection{Método \texttt{\_calcular\_perda\_carga\_garganta}}
+
+\textbf{Nota importante:} Este método é utilizado apenas no modo realista. No modo ideal, não há atrito e este método não é chamado.
+
+\begin{lstlisting}[firstnumber=65]
+def _calcular_perda_carga_garganta(self):
+    h_f_garganta = self.f * (self.L_garganta / self.D2) * (self.v2**2 / (2 * self.g))
+    
+    return h_f_garganta
+\end{lstlisting}
+
+\textbf{Linha 66:} Aplicação da equação de Darcy-Weisbach
+
+A perda de carga por atrito em um tubo é calculada pela equação de Darcy-Weisbach:
+\begin{equation}
+h_f = f \frac{L}{D} \frac{v^2}{2g}
+\end{equation}
+
+onde:
+\begin{itemize}
+    \item $f$ é o fator de atrito de Darcy-Weisbach (adimensional)
+    \item $L$ é o comprimento do trecho (m)
+    \item $D$ é o diâmetro hidráulico (m)
+    \item $v$ é a velocidade média do fluido (m/s)
+    \item $g$ é a aceleração da gravidade (m/s²)
+\end{itemize}
+
+No caso específico:
+\begin{equation}
+h_{f,garganta} = f \frac{L_{garganta}}{D_2} \frac{v_2^2}{2g}
+\end{equation}
+
+\textbf{Linha 68:} Retorna o valor calculado da perda de carga em metros.
+
+\section{Cálculo do Número de Reynolds}
+\label{sec:reynolds}
+
+\subsection{Método \texttt{calcular\_reynolds}}
+
+\begin{lstlisting}[firstnumber=70]
+def calcular_reynolds(self):
+    Re = (self.rho * self.v1 * self.D1) / self.mu
+    return Re
+\end{lstlisting}
+
+\textbf{Linha 71:} Cálculo do número de Reynolds
+
+O número de Reynolds é um parâmetro adimensional que caracteriza o regime de escoamento:
+\begin{equation}
+Re = \frac{\rho v D}{\mu} = \frac{v D}{\nu}
+\end{equation}
+
+onde:
+\begin{itemize}
+    \item $\rho$ é a densidade do fluido (kg/m³)
+    \item $v$ é a velocidade característica (m/s) - utiliza-se $v_1$ da entrada
+    \item $D$ é o diâmetro característico (m) - utiliza-se $D_1$ da entrada
+    \item $\mu$ é a viscosidade dinâmica (Pa·s)
+    \item $\nu = \mu/\rho$ é a viscosidade cinemática (m²/s)
+\end{itemize}
+
+O número de Reynolds indica:
+\begin{itemize}
+    \item $Re < 2300$: Escoamento laminar
+    \item $2300 < Re < 4000$: Escoamento de transição
+    \item $Re > 4000$: Escoamento turbulento
+\end{itemize}
+
+\textbf{Linha 72:} Retorna o número de Reynolds calculado.
+
+\section{Cálculo da Perda Permanente}
+
+\subsection{Método \texttt{\_obter\_perda\_permanente\_pct}}
+
+\begin{lstlisting}[firstnumber=74]
+def _obter_perda_permanente_pct(self):
+    beta = self.D2 / self.D1
+
+    perda_pct = 0.28 - (0.35 * beta) + (0.18 * beta**2)
+    
+    return max(0.10, min(perda_pct, 0.30))
+\end{lstlisting}
+
+\textbf{Linha 75:} Cálculo da razão de diâmetros
+\begin{equation}
+\beta = \frac{D_2}{D_1}
+\end{equation}
+A razão $\beta$ é um parâmetro geométrico fundamental do medidor Venturi, sempre menor que 1.
+
+\textbf{Linha 77:} Cálculo da perda permanente percentual
+
+A perda permanente é expressa como uma porcentagem da diferença de pressão total. A fórmula empírica utilizada é:
+\begin{equation}
+\text{perda\_pct} = 0.28 - 0.35\beta + 0.18\beta^2
+\end{equation}
+
+Esta é uma correlação empírica que relaciona a geometria do Venturi com a perda de pressão permanente.
+
+\textbf{Linha 79:} Limitação do valor entre 10\% e 30\%
+\begin{equation}
+\text{perda\_pct} = \max(0.10, \min(\text{perda\_pct}, 0.30))
+\end{equation}
+
+Esta limitação garante que a perda permanente esteja dentro de uma faixa fisicamente razoável, independentemente do valor calculado pela fórmula empírica.
+
+\section{Cálculo da Geometria Automática}
+
+\subsection{Método \texttt{\_calcular\_geometria\_automatica}}
+
+Este método calcula automaticamente os comprimentos dos cones de entrada e saída do Venturi, assumindo um ângulo de abertura de 15 graus.
+
+\begin{lstlisting}[firstnumber=81]
+def _calcular_geometria_automatica(self):
+    angulo_graus = 15.0
+    angulo_rad = np.radians(angulo_graus)
+    
+    delta_raio = (self.D1 - self.D2) / 2
+    
+    if delta_raio <= 0:
+        self.L_entrada = 0
+        self.L_saida = 0
+    else:
+        comprimento_cone = delta_raio / np.tan(angulo_rad / 2)
+        
+        self.L_entrada = comprimento_cone
+        self.L_saida = comprimento_cone
+    
+    self.L = self.L_entrada + self.L_garganta + self.L_saida
+\end{lstlisting}
+
+\textbf{Linha 82:} Definição do ângulo de abertura
+\begin{equation}
+\theta = 15° \text{ (ângulo total do cone)}
+\end{equation}
+Este é um ângulo típico recomendado para minimizar perdas e evitar separação do escoamento.
+
+\textbf{Linha 83:} Conversão para radianos
+\begin{equation}
+\theta_{rad} = \frac{\pi}{180} \cdot \theta_{graus}
+\end{equation}
+Necessário para cálculos trigonométricos em Python.
+
+\textbf{Linha 85:} Cálculo da diferença de raio
+\begin{equation}
+\Delta r = \frac{D_1 - D_2}{2} = r_1 - r_2
+\end{equation}
+Representa a redução de raio do cone de entrada ou o aumento no cone de saída.
+
+\textbf{Linhas 87-89:} Verificação de validade
+\begin{itemize}
+    \item Se $\Delta r \leq 0$, significa que $D_2 \geq D_1$, o que não é um Venturi válido
+    \item Neste caso, os comprimentos são definidos como zero
+\end{itemize}
+
+\textbf{Linha 91:} Cálculo do comprimento do cone
+
+A partir da geometria do cone, temos:
+\begin{equation}
+\tan\left(\frac{\theta}{2}\right) = \frac{\Delta r}{L_{cone}}
+\end{equation}
+
+Rearranjando:
+\begin{equation}
+L_{cone} = \frac{\Delta r}{\tan(\theta/2)}
+\end{equation}
+
+\textbf{Linhas 93-94:} Atribuição dos comprimentos
+\begin{itemize}
+    \item \textbf{Linha 93:} $L_{entrada} = L_{cone}$ (comprimento do cone convergente)
+    \item \textbf{Linha 94:} $L_{saida} = L_{cone}$ (comprimento do cone divergente)
+\end{itemize}
+
+\textbf{Linha 96:} Comprimento total do Venturi
+\begin{equation}
+L_{total} = L_{entrada} + L_{garganta} + L_{saida}
+\end{equation}
+
+\section{Cálculo do Coeficiente de Perda do Difusor}
+\label{sec:difusor}
+
+\subsection{Método \texttt{\_obter\_k\_difusor\_15\_graus}}
+
+Este método calcula o coeficiente de perda de carga do difusor ($K_{difusor}$) baseado na razão de áreas e em correlações empíricas.
+
+\begin{lstlisting}[firstnumber=98]
+def _obter_k_difusor_15_graus(self):
+
+    AR = (self.D1 / self.D2) ** 2
+ 
+    cp_ideal = 1.0 - (1.0 / AR**2)
+
+    if AR < 1.2:
+        cp_real = 1.4 * (AR - 1.0)
+    elif AR > 4.0:
+        cp_real = 0.64
+    else:
+        cp_real = (0.0394 * AR**3) - (0.3954 * AR**2) + (1.3095 * AR) - 0.7897
+        
+    cp_real = max(0.0, min(cp_real, cp_ideal))
+    
+    k_difusor = cp_ideal - cp_real
+    
+    return max(0.0, k_difusor)
+\end{lstlisting}
+
+\textbf{Linha 100:} Cálculo da razão de áreas
+\begin{equation}
+AR = \left(\frac{D_1}{D_2}\right)^2 = \frac{A_1}{A_2}
+\end{equation}
+A razão de áreas é sempre maior que 1, pois $D_1 > D_2$.
+
+\textbf{Linha 102:} Coeficiente de pressão ideal
+\begin{equation}
+C_{p,ideal} = 1 - \frac{1}{AR^2}
+\end{equation}
+
+Este é o coeficiente de pressão teórico para um difusor ideal (sem perdas), baseado na equação de Bernoulli. Representa a recuperação máxima de pressão possível.
+
+\textbf{Linhas 104-109:} Cálculo do coeficiente de pressão real
+
+O coeficiente de pressão real depende da razão de áreas e é calculado através de correlações empíricas:
+
+\paragraph{Se $AR < 1.2$ (linha 105):}
+\begin{equation}
+C_{p,real} = 1.4(AR - 1.0)
+\end{equation}
+Para razões de área pequenas, utiliza-se uma relação linear.
+
+\paragraph{Se $AR > 4.0$ (linha 107):}
+\begin{equation}
+C_{p,real} = 0.64
+\end{equation}
+Para razões de área muito grandes, o coeficiente atinge um valor assintótico constante.
+
+\paragraph{Se $1.2 \leq AR \leq 4.0$ (linha 109):}
+\begin{equation}
+C_{p,real} = 0.0394 AR^3 - 0.3954 AR^2 + 1.3095 AR - 0.7897
+\end{equation}
+Para valores intermediários, utiliza-se um polinômio de terceiro grau que interpola entre os regimes.
+
+\textbf{Linha 111:} Limitação do coeficiente real
+\begin{equation}
+C_{p,real} = \max(0, \min(C_{p,real}, C_{p,ideal}))
+\end{equation}
+Garante que:
+\begin{itemize}
+    \item $C_{p,real} \geq 0$ (não pode ser negativo)
+    \item $C_{p,real} \leq C_{p,ideal}$ (não pode exceder o valor ideal)
+\end{itemize}
+
+\textbf{Linha 113:} Cálculo do coeficiente de perda
+\begin{equation}
+K_{difusor} = C_{p,ideal} - C_{p,real}
+\end{equation}
+
+O coeficiente de perda representa a diferença entre a recuperação ideal e a real. Quanto maior $K_{difusor}$, maiores são as perdas no difusor.
+
+\textbf{Linha 115:} Garantia de valor não-negativo
+\begin{equation}
+K_{difusor} = \max(0, K_{difusor})
+\end{equation}
+Assegura que o coeficiente de perda nunca seja negativo, o que seria fisicamente inconsistente.
+
+\section{Simulações Numéricas}
+\label{sec:simulacoes}
+
+Esta seção apresenta simulações numéricas detalhadas para diferentes casos de estudo, ilustrando passo a passo cada cálculo realizado pelo simulador. As simulações demonstram a aplicação prática de todas as fórmulas explicadas anteriormente.
+
+\subsection{Simulação: Caso 1 - Modo Ideal - Água}
+\label{sec:simulacao1}
+
+\subsubsection{Parâmetros de Entrada}
+
+\begin{itemize}
+    \item Diâmetro de entrada: $D_1 = 0.1$ m
+    \item Diâmetro da garganta: $D_2 = 0.05$ m
+    \item Comprimento da garganta: $L_{garganta} = 0.05$ m
+    \item Densidade do fluido: $\rho = 1000$ kg/m³
+    \item Densidade do fluido manométrico: $\rho_m = 13600$ kg/m³
+    \item Vazão volumétrica: $Q = 0.01$ m³/s
+    \item Fator de atrito: $f$ (não utilizado no modo ideal - sem atrito)
+    \item Coeficiente de descarga: $C_d = 1.0$
+    \item Viscosidade dinâmica: $\mu = 0.001$ Pa·s
+    \item Pressão na entrada: $P_1 = 101325$ Pa
+    \item Modo de operação: \textbf{Ideal} (sem atrito, sem perdas)
+\end{itemize}
+
+\subsubsection{Cálculos Intermediários}
+
+\paragraph{Áreas das Seções:}
+\begin{align*}
+    A_1 &= \pi \left(\frac{D_1}{2}\right)^2 = \pi \left(\frac{0.1}{2}\right)^2 = 0.007854 \text{ m}^2 \\
+    A_2 &= \pi \left(\frac{D_2}{2}\right)^2 = \pi \left(\frac{0.05}{2}\right)^2 = 0.001963 \text{ m}^2
+\end{align*}
+
+\paragraph{Velocidades - Aplicação da Equação da Continuidade:}
+
+As velocidades são calculadas utilizando a equação da continuidade, que expressa a conservação de massa:
+
+\subparagraph{Equação da Continuidade:}
+
+Para um fluido incompressível em escoamento permanente, a vazão volumétrica é constante:
+\begin{equation}
+Q = v_1 A_1 = v_2 A_2 = \text{constante}
+\end{equation}
+
+Isolando as velocidades:
+\begin{align}
+v_1 &= \frac{Q}{A_1} \\
+v_2 &= \frac{Q}{A_2}
+\end{align}
+
+\subparagraph{Cálculo Numérico:}
+\begin{align*}
+    v_1 &= \frac{Q}{A_1} = \frac{0.01}{0.007854} = 1.2732 \text{ m/s} \\
+    v_2 &= \frac{Q}{A_2} = \frac{0.01}{0.001963} = 5.0930 \text{ m/s}
+\end{align*}
+
+\subparagraph{Verificação da Conservação de Massa:}
+\begin{align*}
+    v_1 A_1 &= 1.2732 \times 0.007854 = 0.01 \text{ m}^3/\text{s} = Q \\
+    v_2 A_2 &= 5.0930 \times 0.001963 = 0.01 \text{ m}^3/\text{s} = Q \\
+    v_1 A_1 &= v_2 A_2 = Q \quad \checkmark
+\end{align*}
+
+\subparagraph{Relação entre Velocidades:}
+Como $A_2 < A_1$, a velocidade na garganta é maior:
+\begin{equation}
+\frac{v_2}{v_1} = \frac{5.0930}{1.2732} = 4.0 = \left(\frac{D_1}{D_2}\right)^2 = \left(\frac{0.1}{0.05}\right)^2 = 4.0
+\end{equation}
+
+A velocidade na garganta é 4 vezes maior que na entrada, pois a área é 4 vezes menor.
+
+\paragraph{Coeficiente de Perda na Entrada:}
+$k_{entrada} = 0.0$ (modo Ideal - sem perdas)
+
+\paragraph{Pressão na Garganta - Derivação Passo a Passo:}
+
+Para calcular a pressão na garganta $P_2$, partimos da equação de Bernoulli e derivamos a fórmula passo a passo:
+
+\subparagraph{Passo 1: Equação de Bernoulli Original}
+
+A equação de Bernoulli para um fluido incompressível entre os pontos 1 (entrada) e 2 (garganta) é:
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 + \rho g z_1 = P_2 + \frac{1}{2}\rho v_2^2 + \rho g z_2
+\end{equation}
+
+\subparagraph{Passo 2: Simplificação para Tubo Horizontal}
+
+Como o medidor Venturi é horizontal, $z_1 = z_2$, então os termos de energia potencial se cancelam:
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2
+\end{equation}
+
+\subparagraph{Passo 3: Inclusão de Perdas na Entrada}
+
+No modo ideal, $k_{entrada} = 0$ (sem perdas). A equação permanece:
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2
+\end{equation}
+
+\subparagraph{Passo 4: Isolamento de $P_2$}
+
+Subtraindo $\frac{1}{2}\rho v_2^2$ de ambos os lados:
+\begin{equation}
+P_2 = P_1 + \frac{1}{2}\rho v_1^2 - \frac{1}{2}\rho v_2^2
+\end{equation}
+
+\subparagraph{Passo 5: Fatoração Final}
+
+Fatorando $\frac{1}{2}\rho$:
+\begin{equation}
+P_2 = P_1 - \frac{1}{2}\rho \left[v_2^2 - v_1^2\right]
+\end{equation}
+
+Como $k_{entrada} = 0$ no modo ideal, a fórmula geral $P_2 = P_1 - \frac{1}{2}\rho \left[v_2^2(1 + k_{entrada}) - v_1^2\right]$ se simplifica para a forma acima.
+
+\subparagraph{Passo 6: Aplicação Numérica}
+
+Substituindo os valores calculados:
+\begin{align*}
+    P_2 &= P_1 - \frac{1}{2}\rho \left[v_2^2 - v_1^2\right] \\
+    P_2 &= 101325 - \frac{1}{2} \cdot 1000 \left[(5.0930)^2 - (1.2732)^2\right] \\
+    P_2 &= 101325 - \frac{1}{2} \cdot 1000 \left[25.939 - 1.621\right] \\
+    P_2 &= 101325 - \frac{1}{2} \cdot 1000 \cdot 24.318 \\
+    P_2 &= 101325 - 12158.54 \\
+    P_2 &= 89166.46 \text{ Pa}
+\end{align*}
+
+\textbf{Interpretação:} A pressão na garganta ($P_2 = 89166.46$ Pa) é menor que a pressão na entrada ($P_1 = 101325$ Pa) devido ao aumento da velocidade (de $v_1 = 1.2732$ m/s para $v_2 = 5.0930$ m/s), conforme o princípio de conservação de energia de Bernoulli.
+
+\paragraph{Perdas na Garganta:}
+Modo ideal: sem perdas por atrito ($\Delta P_{garganta} = 0$). O fator de atrito $f$ não é utilizado, pois não há atrito no modo ideal.
+
+\paragraph{Diferença de Pressão:}
+\begin{align*}
+    \Delta P &= P_1 - P_2 = 101325 - 89166.46 = 12158.54 \text{ Pa}
+\end{align*}
+
+\paragraph{Pressão na Saída:}
+Modo ideal: $P_3 = P_1 = 101325.00$ Pa (recuperação total de pressão, sem perdas por atrito ou outras dissipações)
+
+\paragraph{Desnível Manométrico:}
+\begin{align*}
+    \Delta h &= \frac{\Delta P}{(\rho_m - \rho) g} = \frac{12158.54}{(13600 - 1000) \cdot 9.81} = 0.098365 \text{ m}
+\end{align*}
+
+\paragraph{Número de Reynolds:}
+\begin{align*}
+    Re &= \frac{\rho v_1 D_1}{\mu} = \frac{1000 \cdot 1.2732 \cdot 0.1}{0.001} = 127323.95
+\end{align*}
+
+\paragraph{Geometria do Venturi:}
+\begin{align*}
+    L_{entrada} &= 0.1899 \text{ m} \\
+    L_{saida} &= 0.1899 \text{ m} \\
+    L_{total} &= L_{entrada} + L_{garganta} + L_{saida} = 0.4298 \text{ m}
+\end{align*}
+
+\subsubsection{Resumo dos Resultados}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{l|c}
+\hline
+\textbf{Grandeza} & \textbf{Valor} \\
+\hline
+$A_1$ (m²) & 0.007854 \\
+$A_2$ (m²) & 0.001963 \\
+$v_1$ (m/s) & 1.2732 \\
+$v_2$ (m/s) & 5.0930 \\
+$P_1$ (Pa) & 101325.00 \\
+$P_2$ (Pa) & 89166.46 \\
+$P_3$ (Pa) & 101325.00 \\
+$\Delta P$ (Pa) & 12158.54 \\
+$\Delta h$ (m) & 0.098365 \\
+$h_L$ (m) & 0.000000 \\
+$Re$ & 127323.95 \\
+\hline
+\end{tabular}
+\caption{Resultados da simulação: Caso 1 - Modo Ideal}
+\end{table}
+
+\subsection{Simulação: Caso 2 - Modo Realista - Água}
+
+\subsubsection{Parâmetros de Entrada}
+
+\begin{itemize}
+    \item Diâmetro de entrada: $D_1 = 0.1$ m
+    \item Diâmetro da garganta: $D_2 = 0.05$ m
+    \item Comprimento da garganta: $L_{garganta} = 0.05$ m
+    \item Densidade do fluido: $\rho = 1000$ kg/m³
+    \item Densidade do fluido manométrico: $\rho_m = 13600$ kg/m³
+    \item Vazão volumétrica: $Q = 0.01$ m³/s
+    \item Fator de atrito: $f = 0.02$
+    \item Coeficiente de descarga: $C_d = 0.98$
+    \item Viscosidade dinâmica: $\mu = 0.001$ Pa·s
+    \item Pressão na entrada: $P_1 = 101325$ Pa
+    \item Modo de operação: \textbf{Realista}
+\end{itemize}
+
+\subsubsection{Cálculos Intermediários}
+
+\paragraph{Áreas e Velocidades:}
+\begin{align*}
+    A_1 &= 0.007854 \text{ m}^2, \quad A_2 = 0.001963 \text{ m}^2 \\
+    v_1 &= 1.2732 \text{ m/s}, \quad v_2 = 5.0930 \text{ m/s}
+\end{align*}
+
+\paragraph{Coeficiente de Perda na Entrada:}
+$k_{entrada} = 0.04$ (modo Realista - há perdas por atrito e dissipação)
+
+\paragraph{Pressão na Garganta - Derivação Passo a Passo (Modo Realista):}
+
+No modo realista, há perdas na entrada que devem ser consideradas. Vamos derivar a fórmula passo a passo:
+
+\subparagraph{Passo 1: Equação de Bernoulli com Perdas}
+
+A equação de Bernoulli modificada, incluindo perdas na entrada, é:
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2 + \Delta P_{entrada}
+\end{equation}
+
+onde $\Delta P_{entrada}$ é a perda de pressão na entrada.
+
+\subparagraph{Passo 2: Modelagem da Perda na Entrada}
+
+A perda na entrada é modelada como uma fração da pressão dinâmica na garganta:
+\begin{equation}
+\Delta P_{entrada} = k_{entrada} \cdot \frac{1}{2}\rho v_2^2
+\end{equation}
+
+No modo realista, $k_{entrada} = 0.04$ (perda típica para entrada bem projetada).
+
+\subparagraph{Passo 3: Substituição da Perda na Equação}
+
+Substituindo na equação de Bernoulli:
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2 + k_{entrada} \cdot \frac{1}{2}\rho v_2^2
+\end{equation}
+
+\subparagraph{Passo 4: Fatoração}
+
+Fatorando o termo $\frac{1}{2}\rho v_2^2$:
+\begin{equation}
+P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2 (1 + k_{entrada})
+\end{equation}
+
+\subparagraph{Passo 5: Isolamento de $P_2$}
+
+Subtraindo $\frac{1}{2}\rho v_2^2 (1 + k_{entrada})$ de ambos os lados:
+\begin{equation}
+P_2 = P_1 + \frac{1}{2}\rho v_1^2 - \frac{1}{2}\rho v_2^2 (1 + k_{entrada})
+\end{equation}
+
+\subparagraph{Passo 6: Fatoração Final}
+
+Fatorando $\frac{1}{2}\rho$:
+\begin{equation}
+P_2 = P_1 - \frac{1}{2}\rho \left[v_2^2(1 + k_{entrada}) - v_1^2\right]
+\end{equation}
+
+Esta é a fórmula utilizada no código para o modo realista!
+
+\subparagraph{Passo 7: Aplicação Numérica}
+
+Substituindo os valores calculados:
+\begin{align*}
+    P_2 &= P_1 - \frac{1}{2}\rho \left[v_2^2(1 + k_{entrada}) - v_1^2\right] \\
+    P_2 &= 101325 - \frac{1}{2} \cdot 1000 \left[(5.0930)^2 \cdot (1 + 0.04) - (1.2732)^2\right] \\
+    P_2 &= 101325 - \frac{1}{2} \cdot 1000 \left[5.0930^2 \cdot 1.04 - 1.2732^2\right] \\
+    P_2 &= 101325 - \frac{1}{2} \cdot 1000 \left[25.939 \cdot 1.04 - 1.621\right] \\
+    P_2 &= 101325 - \frac{1}{2} \cdot 1000 \left[26.977 - 1.621\right] \\
+    P_2 &= 101325 - \frac{1}{2} \cdot 1000 \cdot 25.356 \\
+    P_2 &= 101325 - 12677.31 \\
+    P_2 &= 88647.69 \text{ Pa}
+\end{align*}
+
+\textbf{Comparação com Modo Ideal:}
+\begin{itemize}
+    \item \textbf{Modo Ideal:} $P_2 = 89166.46$ Pa (sem perdas na entrada)
+    \item \textbf{Modo Realista:} $P_2 = 88647.69$ Pa (com perdas na entrada)
+    \item \textbf{Diferença:} $89166.46 - 88647.69 = 518.77$ Pa
+\end{itemize}
+
+Esta diferença corresponde exatamente à perda na entrada: $\Delta P_{entrada} = k_{entrada} \cdot \frac{1}{2}\rho v_2^2 = 0.04 \cdot \frac{1}{2} \cdot 1000 \cdot (5.0930)^2 = 518.76$ Pa.
+
+\paragraph{Perdas na Garganta:}
+\begin{align*}
+    h_{f,garganta} &= f \frac{L_{garganta}}{D_2} \frac{v_2^2}{2g} \\
+    h_{f,garganta} &= 0.02 \cdot \frac{0.05}{0.05} \cdot \frac{(5.0930)^2}{2 \cdot 9.81} = 0.026441 \text{ m} \\
+    \Delta P_{garganta} &= h_{f,garganta} \cdot \rho \cdot g = 0.026441 \cdot 1000 \cdot 9.81 = 259.38 \text{ Pa}
+\end{align*}
+
+\paragraph{Pressão Final na Garganta:}
+\begin{align*}
+    P_{2,fim} &= P_2 - \Delta P_{garganta} = 88647.69 - 259.38 = 88388.31 \text{ Pa}
+\end{align*}
+
+\paragraph{Cálculo da Pressão na Saída ($P_3$):}
+\begin{align*}
+    \Delta P_{recuperacao} &= \frac{1}{2}\rho(v_2^2 - v_1^2) = \frac{1}{2} \cdot 1000 \left[(5.0930)^2 - (1.2732)^2\right] = 12158.54 \text{ Pa} \\
+    K_{difusor} &= 0.2940 \\
+    \Delta P_{difusor} &= K_{difusor} \cdot \frac{1}{2}\rho v_2^2 = 0.2940 \cdot \frac{1}{2} \cdot 1000 \cdot (5.0930)^2 = 3812.92 \text{ Pa} \\
+    P_3 &= P_{2,fim} + \Delta P_{recuperacao} - \Delta P_{difusor} \\
+    P_3 &= 88388.31 + 12158.54 - 3812.92 = 96733.93 \text{ Pa}
+\end{align*}
+
+\paragraph{Perdas Totais:}
+\begin{align*}
+    \Delta P_{entrada} &= k_{entrada} \cdot \frac{1}{2}\rho v_2^2 = 0.04 \cdot \frac{1}{2} \cdot 1000 \cdot (5.0930)^2 = 518.76 \text{ Pa} \\
+    \Delta P_{garganta} &= 259.38 \text{ Pa} \\
+    \Delta P_{difusor} &= 3812.92 \text{ Pa} \\
+    \Delta P_{total} &= 4591.07 \text{ Pa} \\
+    h_L &= \frac{\Delta P_{total}}{\rho g} = \frac{4591.07}{1000 \cdot 9.81} = 0.467999 \text{ m}
+\end{align*}
+
+\paragraph{Desnível Manométrico:}
+\begin{align*}
+    \Delta h &= \frac{\Delta P}{(\rho_m - \rho) g} = \frac{12677.31}{(13600 - 1000) \cdot 9.81} = 0.102562 \text{ m}
+\end{align*}
+
+\subsubsection{Resumo dos Resultados}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{l|c}
+\hline
+\textbf{Grandeza} & \textbf{Valor} \\
+\hline
+$A_1$ (m²) & 0.007854 \\
+$A_2$ (m²) & 0.001963 \\
+$v_1$ (m/s) & 1.2732 \\
+$v_2$ (m/s) & 5.0930 \\
+$P_1$ (Pa) & 101325.00 \\
+$P_2$ (Pa) & 88647.69 \\
+$P_{2,fim}$ (Pa) & 88388.31 \\
+$P_3$ (Pa) & 96733.93 \\
+$\Delta P$ (Pa) & 12677.31 \\
+$\Delta h$ (m) & 0.102562 \\
+$h_L$ (m) & 0.467999 \\
+$Re$ & 127323.95 \\
+\hline
+\end{tabular}
+\caption{Resultados da simulação: Caso 2 - Modo Realista}
+\end{table}
+
+\subsection{Simulação: Caso 3 - Modo Realista - Alta Vazão}
+
+\subsubsection{Parâmetros de Entrada}
+
+\begin{itemize}
+    \item Diâmetro de entrada: $D_1 = 0.15$ m
+    \item Diâmetro da garganta: $D_2 = 0.075$ m
+    \item Comprimento da garganta: $L_{garganta} = 0.08$ m
+    \item Densidade do fluido: $\rho = 1000$ kg/m³
+    \item Densidade do fluido manométrico: $\rho_m = 13600$ kg/m³
+    \item Vazão volumétrica: $Q = 0.025$ m³/s (alta vazão)
+    \item Fator de atrito: $f = 0.018$
+    \item Coeficiente de descarga: $C_d = 0.98$
+    \item Viscosidade dinâmica: $\mu = 0.001$ Pa·s
+    \item Pressão na entrada: $P_1 = 200000$ Pa
+    \item Modo de operação: \textbf{Realista}
+\end{itemize}
+
+\subsubsection{Resultados Principais}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{l|c}
+\hline
+\textbf{Grandeza} & \textbf{Valor} \\
+\hline
+$A_1$ (m²) & 0.017671 \\
+$A_2$ (m²) & 0.004418 \\
+$v_1$ (m/s) & 1.4147 \\
+$v_2$ (m/s) & 5.6588 \\
+$P_1$ (Pa) & 200000.00 \\
+$P_2$ (Pa) & 184349.00 \\
+$P_{2,fim}$ (Pa) & 184041.59 \\
+$P_3$ (Pa) & 194344.83 \\
+$\Delta P$ (Pa) & 15651.00 \\
+$\Delta h$ (m) & 0.126620 \\
+$h_L$ (m) & 0.576470 \\
+$Re$ & 212206.59 \\
+\hline
+\end{tabular}
+\caption{Resultados da simulação: Caso 3 - Alta Vazão}
+\end{table}
+
+\textbf{Observações:}
+\begin{itemize}
+    \item Com maior vazão, as velocidades aumentam proporcionalmente
+    \item A diferença de pressão $\Delta P$ aumenta com o quadrado da velocidade
+    \item As perdas de carga ($h_L = 0.576$ m) são maiores devido às maiores velocidades
+    \item O número de Reynolds aumenta, indicando escoamento mais turbulento
+\end{itemize}
+
+\subsection{Simulação: Caso 4 - Modo Realista - Razão de Áreas Pequena}
+
+\subsubsection{Parâmetros de Entrada}
+
+\begin{itemize}
+    \item Diâmetro de entrada: $D_1 = 0.12$ m
+    \item Diâmetro da garganta: $D_2 = 0.10$ m (razão $\beta = 0.833$)
+    \item Comprimento da garganta: $L_{garganta} = 0.06$ m
+    \item Densidade do fluido: $\rho = 1000$ kg/m³
+    \item Densidade do fluido manométrico: $\rho_m = 13600$ kg/m³
+    \item Vazão volumétrica: $Q = 0.015$ m³/s
+    \item Fator de atrito: $f = 0.02$
+    \item Coeficiente de descarga: $C_d = 0.98$
+    \item Viscosidade dinâmica: $\mu = 0.001$ Pa·s
+    \item Pressão na entrada: $P_1 = 101325$ Pa
+    \item Modo de operação: \textbf{Realista}
+\end{itemize}
+
+\subsubsection{Resultados Principais}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{l|c}
+\hline
+\textbf{Grandeza} & \textbf{Valor} \\
+\hline
+$A_1$ (m²) & 0.011310 \\
+$A_2$ (m²) & 0.007854 \\
+$v_1$ (m/s) & 1.3263 \\
+$v_2$ (m/s) & 1.9099 \\
+$P_1$ (Pa) & 101325.00 \\
+$P_2$ (Pa) & 100307.79 \\
+$P_{2,fim}$ (Pa) & 100285.91 \\
+$P_3$ (Pa) & 101003.98 \\
+$\Delta P$ (Pa) & 1017.21 \\
+$\Delta h$ (m) & 0.008229 \\
+$h_L$ (m) & 0.032724 \\
+$Re$ & 159154.94 \\
+\hline
+\end{tabular}
+\caption{Resultados da simulação: Caso 4 - Razão de Áreas Pequena}
+\end{table}
+
+\textbf{Observações:}
+\begin{itemize}
+    \item Com menor diferença entre diâmetros, a diferença de pressão é menor ($\Delta P = 1017$ Pa vs $12158$ Pa no Caso 1)
+    \item As perdas são menores devido às menores velocidades
+    \item O coeficiente de perda do difusor ($K_{difusor} = 0.1240$) é menor que no caso com maior razão de áreas
+    \item A recuperação de pressão é quase total ($P_3 \approx P_1$)
+\end{itemize}
+
+\section{Análise Comparativa}
+
+\subsection{Comparação entre Modos Ideal e Realista}
+
+A Tabela \ref{tab:comparacao} apresenta uma comparação entre os resultados obtidos nos modos ideal e realista para as mesmas condições de entrada (Casos 1 e 2).
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Grandeza} & \textbf{Modo Ideal} & \textbf{Modo Realista} \\
+\hline
+$P_2$ (Pa) & 89166.46 & 88647.69 \\
+$P_3$ (Pa) & 101325.00 (recuperação total) & 96733.93 (perda de 4591 Pa) \\
+$h_L$ (m) & 0.000000 & 0.467999 \\
+$\Delta P$ (Pa) & 12158.54 & 12677.31 \\
+$\Delta h$ (m) & 0.098365 & 0.102562 \\
+Perdas & Nenhuma & Entrada + Garganta + Difusor \\
+\hline
+\end{tabular}
+\caption{Comparação entre modos de operação}
+\label{tab:comparacao}
+\end{table}
+
+\textbf{Principais diferenças:}
+\begin{itemize}
+    \item No modo ideal, $P_3 = P_1$ (recuperação total de pressão)
+    \item No modo realista, há uma perda permanente de $P_1 - P_3 = 4591$ Pa
+    \item A perda de carga total no modo realista é $h_L = 0.468$ m
+    \item A diferença de pressão é ligeiramente maior no modo realista devido às perdas na entrada
+\end{itemize}
+
+\subsection{Influência dos Parâmetros}
+
+\subsubsection{Influência da Razão de Diâmetros}
+
+A razão $\beta = D_2/D_1$ afeta significativamente:
+\begin{itemize}
+    \item \textbf{Diferença de pressão:} Maior $\beta$ (menor diferença entre diâmetros) resulta em menor $\Delta P$
+    \item \textbf{Perdas no difusor:} Maior razão de áreas ($AR = 1/\beta^2$) resulta em maiores perdas
+    \item \textbf{Recuperação de pressão:} Com menor $\beta$, a recuperação é mais eficiente
+\end{itemize}
+
+\subsubsection{Influência da Vazão}
+
+A vazão $Q$ influencia:
+\begin{itemize}
+    \item \textbf{Velocidades:} Proporcionais à vazão ($v = Q/A$)
+    \item \textbf{Diferença de pressão:} Proporcional ao quadrado da vazão ($\Delta P \propto v^2$)
+    \item \textbf{Perdas de carga:} Proporcionais ao quadrado da velocidade, portanto ao quadrado da vazão
+    \item \textbf{Número de Reynolds:} Proporcional à vazão
+\end{itemize}
+
+\subsubsection{Influência do Fator de Atrito}
+
+\textbf{Nota:} O fator de atrito $f$ é utilizado apenas no modo realista. No modo ideal, não há atrito e o fator de atrito não é utilizado.
+
+No modo realista, o fator de atrito $f$ afeta diretamente:
+\begin{itemize}
+    \item \textbf{Perdas na garganta:} $h_f = f \frac{L}{D} \frac{v^2}{2g}$
+    \item \textbf{Pressão final na garganta:} $P_{2,fim} = P_2 - \Delta P_{garganta}$
+    \item \textbf{Perda de carga total:} Contribui diretamente para $h_L$
+\end{itemize}
+
+\subsubsection{Influência do Coeficiente de Descarga}
+
+O coeficiente de descarga $C_d$ (usado no modo realista):
+\begin{itemize}
+    \item Representa a eficiência do medidor
+    \item Valores típicos: $0.95 < C_d < 0.99$
+    \item No código atual, não é utilizado diretamente nos cálculos de pressão, mas poderia ser usado para corrigir a vazão teórica
+\end{itemize}
+
+\section{Resumo: Mapeamento dos Conteúdos Teóricos no Código}
+
+Esta seção apresenta um resumo completo de onde cada conteúdo teórico da mecânica dos fluidos é aplicado no código do simulador de Venturi.
+
+\subsection{Definição de Fluido, Formas de Análise e Descrição}
+
+\begin{itemize}
+    \item \textbf{Fluido incompressível:} A densidade $\rho$ é constante em todos os cálculos (parâmetro de entrada, linha 9).
+    \item \textbf{Abordagem de Euler:} Propriedades calculadas em seções fixas (entrada, garganta, saída) - linhas 31-32, 39, 47, 52, 58.
+    \item \textbf{Escoamento permanente:} Cálculos realizados uma única vez, assumindo regime permanente (método \texttt{calcular()}, linha 9).
+    \item \textbf{Modo invíscido vs viscoso:} Implementado através do parâmetro \texttt{mode} (linhas 34-37, 41-42, 51-53).
+\end{itemize}
+
+\subsection{Propriedades dos Fluidos}
+
+\begin{itemize}
+    \item \textbf{Densidade ($\rho$):} Utilizada em:
+    \begin{itemize}
+        \item Cálculo de pressões (linha 39, 52, 55, 57, 58, 59)
+        \item Cálculo de perdas (linhas 45, 61)
+        \item Cálculo do desnível manométrico (linha 63)
+        \item Cálculo do número de Reynolds (linha 71)
+    \end{itemize}
+    \item \textbf{Viscosidade dinâmica ($\mu$):} Utilizada no cálculo do número de Reynolds (linha 71).
+    \item \textbf{Pressão ($P$):} Calculada em múltiplas seções:
+    \begin{itemize}
+        \item $P_1$: Parâmetro de entrada (linha 9)
+        \item $P_2$: Calculada na linha 39
+        \item $P_{2,fim}$: Calculada na linha 47
+        \item $P_3$: Calculada na linha 52 (ideal) ou 58 (realista)
+    \end{itemize}
+\end{itemize}
+
+\subsection{Forças Hidrostáticas e Empuxo}
+
+\begin{itemize}
+    \item \textbf{Princípio hidrostático:} Aplicado no cálculo do desnível manométrico (linha 63):
+    \begin{equation}
+    \Delta h = \frac{\Delta P}{(\rho_m - \rho) g}
+    \end{equation}
+    \item \textbf{Diferença de densidades:} A diferença $(\rho_m - \rho)$ é fundamental para o funcionamento do manômetro diferencial.
+\end{itemize}
+
+\subsection{Equações Básicas na Forma Integral para um Volume de Controle}
+
+\begin{itemize}
+    \item \textbf{Conservação de Massa (Equação da Continuidade):} Aplicada diretamente nas linhas 31-32:
+    \begin{lstlisting}[firstnumber=31]
+self.v1 = self.Q / self.A1
+self.v2 = self.Q / self.A2
+    \end{lstlisting}
+    Garante que $v_1 A_1 = v_2 A_2 = Q$ (constante).
+    \item \textbf{Conservação de Quantidade de Movimento:} Implícita no cálculo das pressões e forças nas paredes do Venturi.
+    \item \textbf{Conservação de Energia:} Base teórica para a equação de Bernoulli aplicada no código.
+\end{itemize}
+
+\subsection{Equação de Euler}
+
+\begin{itemize}
+    \item \textbf{Integração ao longo de linha de corrente:} Resulta na equação de Bernoulli, que é a base para o cálculo de pressões.
+    \item \textbf{Aplicação:} A equação de Euler integrada é utilizada indiretamente através da equação de Bernoulli (linha 39).
+\end{itemize}
+
+\subsection{Equação de Bernoulli}
+
+\begin{itemize}
+    \item \textbf{Forma simplificada (tubo horizontal):} Base para o cálculo de $P_2$ (linha 39):
+    \begin{equation}
+    P_2 = P_1 - \frac{1}{2}\rho \left[v_2^2(1 + k_{entrada}) - v_1^2\right]
+    \end{equation}
+    \item \textbf{Equação modificada (com perdas):} Aplicada em múltiplos pontos:
+    \begin{itemize}
+        \item Cálculo de $P_2$ com perda na entrada (linha 39)
+        \item Recuperação dinâmica (linha 55): $\Delta P_{recuperacao} = \frac{1}{2}\rho(v_2^2 - v_1^2)$
+        \item Perda no difusor (linha 57): $\Delta P_{difusor} = K_{difusor} \cdot \frac{1}{2}\rho v_2^2$
+        \item Cálculo de $P_3$ (linha 58): $P_3 = P_{2,fim} + \Delta P_{recuperacao} - \Delta P_{difusor}$
+    \end{itemize}
+\end{itemize}
+
+\subsection{Escoamento em Dutos}
+
+\begin{itemize}
+    \item \textbf{Perdas por atrito (Darcy-Weisbach):} Implementada no método \texttt{\_calcular\_perda\_carga\_garganta()} (linhas 65-68):
+    \begin{equation}
+    h_{f,garganta} = f \frac{L_{garganta}}{D_2} \frac{v_2^2}{2g}
+    \end{equation}
+    \item \textbf{Perdas localizadas:}
+    \begin{itemize}
+        \item Perda na entrada: $k_{entrada} = 0.04$ (modo realista, linha 37), aplicada na linha 39 e calculada na linha 59
+        \item Perda no difusor: $K_{difusor}$ calculado no método \texttt{\_obter\_k\_difusor\_15\_graus()} (linhas 98-115), aplicado na linha 57
+    \end{itemize}
+    \item \textbf{Número de Reynolds:} Calculado no método \texttt{calcular\_reynolds()} (linha 71):
+    \begin{equation}
+    Re = \frac{\rho v_1 D_1}{\mu}
+    \end{equation}
+    \item \textbf{Velocidade média:} Utilizada em todos os cálculos (linhas 31-32), assumindo perfil de velocidade uniforme (aproximação válida para escoamento turbulento).
+\end{itemize}
+
+\subsection{Tabela Resumo de Aplicações}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Conteúdo Teórico} & \textbf{Aplicação no Código} \\
+\hline
+Fluido incompressível & Densidade $\rho$ constante (parâmetro linha 9) \\
+\hline
+Abordagem de Euler & Propriedades em seções fixas (linhas 31-32, 39, 47, 52, 58) \\
+\hline
+Densidade ($\rho$) & Cálculo de pressões, perdas, desnível, Reynolds (linhas 39, 45, 55, 57, 59, 61, 63, 71) \\
+\hline
+Viscosidade ($\mu$) & Cálculo do número de Reynolds (linha 71) \\
+\hline
+Pressão ($P$) & $P_1$ entrada (linha 9), $P_2$ calculada (linha 39), $P_3$ calculada (linhas 52, 58) \\
+\hline
+Princípio hidrostático & Cálculo do desnível manométrico (linha 63) \\
+\hline
+Conservação de massa & Equação da continuidade (linhas 31-32): $v = Q/A$ \\
+\hline
+Equação de Euler & Base teórica para Bernoulli (aplicada indiretamente) \\
+\hline
+Equação de Bernoulli & Cálculo de $P_2$ (linha 39), recuperação dinâmica (linha 55), perdas (linhas 57, 59) \\
+\hline
+Darcy-Weisbach & Perdas na garganta (linhas 65-68) \\
+\hline
+Perdas localizadas & Entrada: $k_{entrada}$ (linhas 37, 39, 59); Difusor: $K_{difusor}$ (linhas 98-115, 57) \\
+\hline
+Número de Reynolds & Caracterização do regime (linha 71) \\
+\hline
+Velocidade média & Utilizada em todos os cálculos (linhas 31-32) \\
+\hline
+\end{tabular}
+\caption{Resumo do mapeamento dos conteúdos teóricos no código}
+\label{tab:mapeamento}
+\end{table}
+
+\section{Conclusão}
+
+Este documento apresentou uma explicação detalhada de todos os cálculos implementados no simulador de Venturi. Os métodos implementados seguem os princípios fundamentais da mecânica dos fluidos:
+
+\begin{itemize}
+    \item \textbf{Conservação de Massa:} Utilizada no cálculo das velocidades através da equação da continuidade
+    \item \textbf{Equação de Bernoulli:} Base para o cálculo das pressões ao longo do medidor
+    \item \textbf{Perdas de Carga:} Consideradas através de correlações empíricas e a equação de Darcy-Weisbach
+    \item \textbf{Geometria:} Cálculo automático das dimensões baseado em recomendações de projeto
+\end{itemize}
+
+O simulador permite analisar tanto o comportamento ideal (sem atrito, sem perdas) quanto o real (com atrito e perdas de carga) do medidor Venturi, fornecendo informações detalhadas sobre pressões, velocidades e perdas de carga em cada seção do dispositivo.
+
+\end{document}
+

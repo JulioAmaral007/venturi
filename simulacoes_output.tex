@@ -1,0 +1,570 @@
+\section{Simulações Numéricas}
+
+Esta seção apresenta simulações numéricas detalhadas para diferentes casos de estudo, ilustrando passo a passo cada cálculo realizado pelo simulador.
+
+% === SIMULAÇÃO: Caso 1: Modo Ideal - Água ===
+% Modo: Ideal
+% Parâmetros de entrada:
+% D1 = 0.1 m
+% D2 = 0.05 m
+% L_garganta = 0.05 m
+% rho = 1000 kg/m³
+% rho_m = 13600 kg/m³
+% Q = 0.01 m³/s
+% f = 0.02
+% Cd = 1.0
+% mu = 0.001 Pa·s
+% P1 = 101325 Pa
+
+\subsection{Simulação: Caso 1: Modo Ideal - Água}
+
+\subsubsection{Parâmetros de Entrada}
+
+\begin{itemize}
+    \item Diâmetro de entrada: $D_1 = 0.1$ m
+    \item Diâmetro da garganta: $D_2 = 0.05$ m
+    \item Comprimento da garganta: $L_{garganta} = 0.05$ m
+    \item Densidade do fluido: $\rho = 1000$ kg/m³
+    \item Densidade do fluido manométrico: $\rho_m = 13600$ kg/m³
+    \item Vazão volumétrica: $Q = 0.01$ m³/s
+    \item Fator de atrito: $f = 0.02$
+    \item Coeficiente de descarga: $C_d = 1.0$
+    \item Viscosidade dinâmica: $\mu = 0.001$ Pa·s
+    \item Pressão na entrada: $P_1 = 101325$ Pa
+    \item Modo de operação: \textbf{Ideal}
+\end{itemize}
+
+\subsubsection{Cálculos Intermediários}
+
+\paragraph{Áreas das Seções:}
+\begin{align*}
+    A_1 &= \pi \left(\frac{D_1}{2}\right)^2 = \pi \left(\frac{0.1}{2}\right)^2 = 0.007854 \text{ m}^2 \\
+    A_2 &= \pi \left(\frac{D_2}{2}\right)^2 = \pi \left(\frac{0.05}{2}\right)^2 = 0.001963 \text{ m}^2
+\end{align*}
+
+\paragraph{Velocidades:}
+\begin{align*}
+    v_1 &= \frac{Q}{A_1} = \frac{0.01}{0.007854} = 1.2732 \text{ m/s} \\
+    v_2 &= \frac{Q}{A_2} = \frac{0.01}{0.001963} = 5.0930 \text{ m/s}
+\end{align*}
+
+\paragraph{Coeficiente de Perda na Entrada:}
+$k_{entrada} = 0.0$ (modo Ideal)
+
+\paragraph{Pressão na Garganta (antes das perdas):}
+\begin{align*}
+    P_2 &= P_1 - \frac{1}{2}\rho \left[v_2^2(1 + k_{entrada}) - v_1^2\right] \\
+    P_2 &= 101325 - \frac{1}{2} \cdot 1000 \left[(5.0930)^2 \cdot (1 + 0.0) - (1.2732)^2\right] \\
+    P_2 &= 89166.46 \text{ Pa}
+\end{align*}
+
+\paragraph{Perdas na Garganta:}
+Modo ideal: sem perdas ($\Delta P_{garganta} = 0$)
+
+\paragraph{Pressão Final na Garganta:}
+$P_{2,fim} = P_2 = 89166.46$ Pa
+
+\paragraph{Diferença de Pressão:}
+\begin{align*}
+    \Delta P &= P_1 - P_2 = 101325 - 89166.46 = 12158.54 \text{ Pa}
+\end{align*}
+
+\paragraph{Pressão na Saída:}
+Modo ideal: $P_3 = P_1 = 101325.00$ Pa (recuperação total)
+
+\paragraph{Perda de Carga Total:}
+Modo ideal: $h_L = 0$ (sem perdas)
+
+\paragraph{Desnível Manométrico:}
+\begin{align*}
+    \Delta h &= \frac{\Delta P}{(ho_m - \rho) g} = \frac{12158.54}{(13600 - 1000) \cdot 9.81} = 0.098365 \text{ m}
+\end{align*}
+
+\paragraph{Número de Reynolds:}
+\begin{align*}
+    Re &= \frac{\rho v_1 D_1}{\mu} = \frac{1000 \cdot 1.2732 \cdot 0.1}{0.001} = 127323.95
+\end{align*}
+
+\paragraph{Geometria do Venturi:}
+\begin{align*}
+    L_{entrada} &= 0.1899 \text{ m} \\
+    L_{saida} &= 0.1899 \text{ m} \\
+    L_{total} &= L_{entrada} + L_{garganta} + L_{saida} = 0.4298 \text{ m}
+\end{align*}
+
+\subsubsection{Resumo dos Resultados}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{l|c}
+\hline
+\textbf{Grandeza} & \textbf{Valor} \\
+\hline
+$A_1$ (m²) & 0.007854 \\
+$A_2$ (m²) & 0.001963 \\
+$v_1$ (m/s) & 1.2732 \\
+$v_2$ (m/s) & 5.0930 \\
+$P_1$ (Pa) & 101325.00 \\
+$P_2$ (Pa) & 89166.46 \\
+$P_3$ (Pa) & 101325.00 \\
+$\Delta P$ (Pa) & 12158.54 \\
+$\Delta h$ (m) & 0.098365 \\
+$Re$ & 127323.95 \\
+\hline
+\end{tabular}
+\caption{Resultados da simulação: Caso 1: Modo Ideal - Água}
+\end{table}
+
+% === SIMULAÇÃO: Caso 2: Modo Realista - Água ===
+% Modo: Realista
+% Parâmetros de entrada:
+% D1 = 0.1 m
+% D2 = 0.05 m
+% L_garganta = 0.05 m
+% rho = 1000 kg/m³
+% rho_m = 13600 kg/m³
+% Q = 0.01 m³/s
+% f = 0.02
+% Cd = 0.98
+% mu = 0.001 Pa·s
+% P1 = 101325 Pa
+
+\subsection{Simulação: Caso 2: Modo Realista - Água}
+
+\subsubsection{Parâmetros de Entrada}
+
+\begin{itemize}
+    \item Diâmetro de entrada: $D_1 = 0.1$ m
+    \item Diâmetro da garganta: $D_2 = 0.05$ m
+    \item Comprimento da garganta: $L_{garganta} = 0.05$ m
+    \item Densidade do fluido: $\rho = 1000$ kg/m³
+    \item Densidade do fluido manométrico: $\rho_m = 13600$ kg/m³
+    \item Vazão volumétrica: $Q = 0.01$ m³/s
+    \item Fator de atrito: $f = 0.02$
+    \item Coeficiente de descarga: $C_d = 0.98$
+    \item Viscosidade dinâmica: $\mu = 0.001$ Pa·s
+    \item Pressão na entrada: $P_1 = 101325$ Pa
+    \item Modo de operação: \textbf{Realista}
+\end{itemize}
+
+\subsubsection{Cálculos Intermediários}
+
+\paragraph{Áreas das Seções:}
+\begin{align*}
+    A_1 &= \pi \left(\frac{D_1}{2}\right)^2 = \pi \left(\frac{0.1}{2}\right)^2 = 0.007854 \text{ m}^2 \\
+    A_2 &= \pi \left(\frac{D_2}{2}\right)^2 = \pi \left(\frac{0.05}{2}\right)^2 = 0.001963 \text{ m}^2
+\end{align*}
+
+\paragraph{Velocidades:}
+\begin{align*}
+    v_1 &= \frac{Q}{A_1} = \frac{0.01}{0.007854} = 1.2732 \text{ m/s} \\
+    v_2 &= \frac{Q}{A_2} = \frac{0.01}{0.001963} = 5.0930 \text{ m/s}
+\end{align*}
+
+\paragraph{Coeficiente de Perda na Entrada:}
+$k_{entrada} = 0.04$ (modo Realista)
+
+\paragraph{Pressão na Garganta (antes das perdas):}
+\begin{align*}
+    P_2 &= P_1 - \frac{1}{2}\rho \left[v_2^2(1 + k_{entrada}) - v_1^2\right] \\
+    P_2 &= 101325 - \frac{1}{2} \cdot 1000 \left[(5.0930)^2 \cdot (1 + 0.04) - (1.2732)^2\right] \\
+    P_2 &= 88647.69 \text{ Pa}
+\end{align*}
+
+\paragraph{Perdas na Garganta:}
+\begin{align*}
+    h_{f,garganta} &= f \frac{L_{garganta}}{D_2} \frac{v_2^2}{2g} \\
+    h_{f,garganta} &= 0.02 \cdot \frac{0.05}{0.05} \cdot \frac{(5.0930)^2}{2 \cdot 9.81} \\
+    h_{f,garganta} &= 0.026441 \text{ m} \\
+    \Delta P_{garganta} &= h_{f,garganta} \cdot \rho \cdot g = 0.026441 \cdot 1000 \cdot 9.81 = 259.38 \text{ Pa}
+\end{align*}
+
+\paragraph{Pressão Final na Garganta:}
+\begin{align*}
+    P_{2,fim} &= P_2 - \Delta P_{garganta} = 88647.69 - 259.38 = 88388.31 \text{ Pa}
+\end{align*}
+
+\paragraph{Diferença de Pressão:}
+\begin{align*}
+    \Delta P &= P_1 - P_2 = 101325 - 88647.69 = 12677.31 \text{ Pa}
+\end{align*}
+
+\paragraph{Cálculo da Pressão na Saída ($P_3$):}
+\begin{align*}
+    \Delta P_{recuperacao} &= \frac{1}{2}\rho(v_2^2 - v_1^2) = \frac{1}{2} \cdot 1000 \left[(5.0930)^2 - (1.2732)^2\right] = 12158.54 \text{ Pa} \\
+    K_{difusor} &= 0.2940 \\
+    \Delta P_{difusor} &= K_{difusor} \cdot \frac{1}{2}\rho v_2^2 = 0.2940 \cdot \frac{1}{2} \cdot 1000 \cdot (5.0930)^2 = 3812.92 \text{ Pa} \\
+    P_3 &= P_{2,fim} + \Delta P_{recuperacao} - \Delta P_{difusor} \\
+    P_3 &= 88388.31 + 12158.54 - 3812.92 = 96733.93 \text{ Pa}
+\end{align*}
+
+\paragraph{Perdas Totais:}
+\begin{align*}
+    \Delta P_{entrada} &= 518.76 \text{ Pa} \\
+    \Delta P_{garganta} &= 259.38 \text{ Pa} \\
+    \Delta P_{difusor} &= 3812.92 \text{ Pa} \\
+    \Delta P_{total} &= 4591.07 \text{ Pa} \\
+    h_L &= \frac{\Delta P_{total}}{\rho g} = \frac{4591.07}{1000 \cdot 9.81} = 0.467999 \text{ m}
+\end{align*}
+
+\paragraph{Desnível Manométrico:}
+\begin{align*}
+    \Delta h &= \frac{\Delta P}{(ho_m - \rho) g} = \frac{12677.31}{(13600 - 1000) \cdot 9.81} = 0.102562 \text{ m}
+\end{align*}
+
+\paragraph{Número de Reynolds:}
+\begin{align*}
+    Re &= \frac{\rho v_1 D_1}{\mu} = \frac{1000 \cdot 1.2732 \cdot 0.1}{0.001} = 127323.95
+\end{align*}
+
+\paragraph{Geometria do Venturi:}
+\begin{align*}
+    L_{entrada} &= 0.1899 \text{ m} \\
+    L_{saida} &= 0.1899 \text{ m} \\
+    L_{total} &= L_{entrada} + L_{garganta} + L_{saida} = 0.4298 \text{ m}
+\end{align*}
+
+\subsubsection{Resumo dos Resultados}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{l|c}
+\hline
+\textbf{Grandeza} & \textbf{Valor} \\
+\hline
+$A_1$ (m²) & 0.007854 \\
+$A_2$ (m²) & 0.001963 \\
+$v_1$ (m/s) & 1.2732 \\
+$v_2$ (m/s) & 5.0930 \\
+$P_1$ (Pa) & 101325.00 \\
+$P_2$ (Pa) & 88647.69 \\
+$P_{2,fim}$ (Pa) & 88388.31 \\
+$P_3$ (Pa) & 96733.93 \\
+$\Delta P$ (Pa) & 12677.31 \\
+$\Delta h$ (m) & 0.102562 \\
+$h_L$ (m) & 0.467999 \\
+$Re$ & 127323.95 \\
+\hline
+\end{tabular}
+\caption{Resultados da simulação: Caso 2: Modo Realista - Água}
+\end{table}
+
+% === SIMULAÇÃO: Caso 3: Modo Realista - Alta Vazão ===
+% Modo: Realista
+% Parâmetros de entrada:
+% D1 = 0.15 m
+% D2 = 0.075 m
+% L_garganta = 0.08 m
+% rho = 1000 kg/m³
+% rho_m = 13600 kg/m³
+% Q = 0.025 m³/s
+% f = 0.018
+% Cd = 0.98
+% mu = 0.001 Pa·s
+% P1 = 200000 Pa
+
+\subsection{Simulação: Caso 3: Modo Realista - Alta Vazão}
+
+\subsubsection{Parâmetros de Entrada}
+
+\begin{itemize}
+    \item Diâmetro de entrada: $D_1 = 0.15$ m
+    \item Diâmetro da garganta: $D_2 = 0.075$ m
+    \item Comprimento da garganta: $L_{garganta} = 0.08$ m
+    \item Densidade do fluido: $\rho = 1000$ kg/m³
+    \item Densidade do fluido manométrico: $\rho_m = 13600$ kg/m³
+    \item Vazão volumétrica: $Q = 0.025$ m³/s
+    \item Fator de atrito: $f = 0.018$
+    \item Coeficiente de descarga: $C_d = 0.98$
+    \item Viscosidade dinâmica: $\mu = 0.001$ Pa·s
+    \item Pressão na entrada: $P_1 = 200000$ Pa
+    \item Modo de operação: \textbf{Realista}
+\end{itemize}
+
+\subsubsection{Cálculos Intermediários}
+
+\paragraph{Áreas das Seções:}
+\begin{align*}
+    A_1 &= \pi \left(\frac{D_1}{2}\right)^2 = \pi \left(\frac{0.15}{2}\right)^2 = 0.017671 \text{ m}^2 \\
+    A_2 &= \pi \left(\frac{D_2}{2}\right)^2 = \pi \left(\frac{0.075}{2}\right)^2 = 0.004418 \text{ m}^2
+\end{align*}
+
+\paragraph{Velocidades:}
+\begin{align*}
+    v_1 &= \frac{Q}{A_1} = \frac{0.025}{0.017671} = 1.4147 \text{ m/s} \\
+    v_2 &= \frac{Q}{A_2} = \frac{0.025}{0.004418} = 5.6588 \text{ m/s}
+\end{align*}
+
+\paragraph{Coeficiente de Perda na Entrada:}
+$k_{entrada} = 0.04$ (modo Realista)
+
+\paragraph{Pressão na Garganta (antes das perdas):}
+\begin{align*}
+    P_2 &= P_1 - \frac{1}{2}\rho \left[v_2^2(1 + k_{entrada}) - v_1^2\right] \\
+    P_2 &= 200000 - \frac{1}{2} \cdot 1000 \left[(5.6588)^2 \cdot (1 + 0.04) - (1.4147)^2\right] \\
+    P_2 &= 184349.00 \text{ Pa}
+\end{align*}
+
+\paragraph{Perdas na Garganta:}
+\begin{align*}
+    h_{f,garganta} &= f \frac{L_{garganta}}{D_2} \frac{v_2^2}{2g} \\
+    h_{f,garganta} &= 0.018 \cdot \frac{0.08}{0.075} \cdot \frac{(5.6588)^2}{2 \cdot 9.81} \\
+    h_{f,garganta} &= 0.031337 \text{ m} \\
+    \Delta P_{garganta} &= h_{f,garganta} \cdot \rho \cdot g = 0.031337 \cdot 1000 \cdot 9.81 = 307.42 \text{ Pa}
+\end{align*}
+
+\paragraph{Pressão Final na Garganta:}
+\begin{align*}
+    P_{2,fim} &= P_2 - \Delta P_{garganta} = 184349.00 - 307.42 = 184041.59 \text{ Pa}
+\end{align*}
+
+\paragraph{Diferença de Pressão:}
+\begin{align*}
+    \Delta P &= P_1 - P_2 = 200000 - 184349.00 = 15651.00 \text{ Pa}
+\end{align*}
+
+\paragraph{Cálculo da Pressão na Saída ($P_3$):}
+\begin{align*}
+    \Delta P_{recuperacao} &= \frac{1}{2}\rho(v_2^2 - v_1^2) = \frac{1}{2} \cdot 1000 \left[(5.6588)^2 - (1.4147)^2\right] = 15010.55 \text{ Pa} \\
+    K_{difusor} &= 0.2940 \\
+    \Delta P_{difusor} &= K_{difusor} \cdot \frac{1}{2}\rho v_2^2 = 0.2940 \cdot \frac{1}{2} \cdot 1000 \cdot (5.6588)^2 = 4707.31 \text{ Pa} \\
+    P_3 &= P_{2,fim} + \Delta P_{recuperacao} - \Delta P_{difusor} \\
+    P_3 &= 184041.59 + 15010.55 - 4707.31 = 194344.83 \text{ Pa}
+\end{align*}
+
+\paragraph{Perdas Totais:}
+\begin{align*}
+    \Delta P_{entrada} &= 640.45 \text{ Pa} \\
+    \Delta P_{garganta} &= 307.42 \text{ Pa} \\
+    \Delta P_{difusor} &= 4707.31 \text{ Pa} \\
+    \Delta P_{total} &= 5655.17 \text{ Pa} \\
+    h_L &= \frac{\Delta P_{total}}{\rho g} = \frac{5655.17}{1000 \cdot 9.81} = 0.576470 \text{ m}
+\end{align*}
+
+\paragraph{Desnível Manométrico:}
+\begin{align*}
+    \Delta h &= \frac{\Delta P}{(ho_m - \rho) g} = \frac{15651.00}{(13600 - 1000) \cdot 9.81} = 0.126620 \text{ m}
+\end{align*}
+
+\paragraph{Número de Reynolds:}
+\begin{align*}
+    Re &= \frac{\rho v_1 D_1}{\mu} = \frac{1000 \cdot 1.4147 \cdot 0.15}{0.001} = 212206.59
+\end{align*}
+
+\paragraph{Geometria do Venturi:}
+\begin{align*}
+    L_{entrada} &= 0.2848 \text{ m} \\
+    L_{saida} &= 0.2848 \text{ m} \\
+    L_{total} &= L_{entrada} + L_{garganta} + L_{saida} = 0.6497 \text{ m}
+\end{align*}
+
+\subsubsection{Resumo dos Resultados}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{l|c}
+\hline
+\textbf{Grandeza} & \textbf{Valor} \\
+\hline
+$A_1$ (m²) & 0.017671 \\
+$A_2$ (m²) & 0.004418 \\
+$v_1$ (m/s) & 1.4147 \\
+$v_2$ (m/s) & 5.6588 \\
+$P_1$ (Pa) & 200000.00 \\
+$P_2$ (Pa) & 184349.00 \\
+$P_{2,fim}$ (Pa) & 184041.59 \\
+$P_3$ (Pa) & 194344.83 \\
+$\Delta P$ (Pa) & 15651.00 \\
+$\Delta h$ (m) & 0.126620 \\
+$h_L$ (m) & 0.576470 \\
+$Re$ & 212206.59 \\
+\hline
+\end{tabular}
+\caption{Resultados da simulação: Caso 3: Modo Realista - Alta Vazão}
+\end{table}
+
+% === SIMULAÇÃO: Caso 4: Modo Realista - Razão de Áreas Pequena ===
+% Modo: Realista
+% Parâmetros de entrada:
+% D1 = 0.12 m
+% D2 = 0.1 m
+% L_garganta = 0.06 m
+% rho = 1000 kg/m³
+% rho_m = 13600 kg/m³
+% Q = 0.015 m³/s
+% f = 0.02
+% Cd = 0.98
+% mu = 0.001 Pa·s
+% P1 = 101325 Pa
+
+\subsection{Simulação: Caso 4: Modo Realista - Razão de Áreas Pequena}
+
+\subsubsection{Parâmetros de Entrada}
+
+\begin{itemize}
+    \item Diâmetro de entrada: $D_1 = 0.12$ m
+    \item Diâmetro da garganta: $D_2 = 0.1$ m
+    \item Comprimento da garganta: $L_{garganta} = 0.06$ m
+    \item Densidade do fluido: $\rho = 1000$ kg/m³
+    \item Densidade do fluido manométrico: $\rho_m = 13600$ kg/m³
+    \item Vazão volumétrica: $Q = 0.015$ m³/s
+    \item Fator de atrito: $f = 0.02$
+    \item Coeficiente de descarga: $C_d = 0.98$
+    \item Viscosidade dinâmica: $\mu = 0.001$ Pa·s
+    \item Pressão na entrada: $P_1 = 101325$ Pa
+    \item Modo de operação: \textbf{Realista}
+\end{itemize}
+
+\subsubsection{Cálculos Intermediários}
+
+\paragraph{Áreas das Seções:}
+\begin{align*}
+    A_1 &= \pi \left(\frac{D_1}{2}\right)^2 = \pi \left(\frac{0.12}{2}\right)^2 = 0.011310 \text{ m}^2 \\
+    A_2 &= \pi \left(\frac{D_2}{2}\right)^2 = \pi \left(\frac{0.1}{2}\right)^2 = 0.007854 \text{ m}^2
+\end{align*}
+
+\paragraph{Velocidades:}
+\begin{align*}
+    v_1 &= \frac{Q}{A_1} = \frac{0.015}{0.011310} = 1.3263 \text{ m/s} \\
+    v_2 &= \frac{Q}{A_2} = \frac{0.015}{0.007854} = 1.9099 \text{ m/s}
+\end{align*}
+
+\paragraph{Coeficiente de Perda na Entrada:}
+$k_{entrada} = 0.04$ (modo Realista)
+
+\paragraph{Pressão na Garganta (antes das perdas):}
+\begin{align*}
+    P_2 &= P_1 - \frac{1}{2}\rho \left[v_2^2(1 + k_{entrada}) - v_1^2\right] \\
+    P_2 &= 101325 - \frac{1}{2} \cdot 1000 \left[(1.9099)^2 \cdot (1 + 0.04) - (1.3263)^2\right] \\
+    P_2 &= 100307.79 \text{ Pa}
+\end{align*}
+
+\paragraph{Perdas na Garganta:}
+\begin{align*}
+    h_{f,garganta} &= f \frac{L_{garganta}}{D_2} \frac{v_2^2}{2g} \\
+    h_{f,garganta} &= 0.02 \cdot \frac{0.06}{0.1} \cdot \frac{(1.9099)^2}{2 \cdot 9.81} \\
+    h_{f,garganta} &= 0.002231 \text{ m} \\
+    \Delta P_{garganta} &= h_{f,garganta} \cdot \rho \cdot g = 0.002231 \cdot 1000 \cdot 9.81 = 21.89 \text{ Pa}
+\end{align*}
+
+\paragraph{Pressão Final na Garganta:}
+\begin{align*}
+    P_{2,fim} &= P_2 - \Delta P_{garganta} = 100307.79 - 21.89 = 100285.91 \text{ Pa}
+\end{align*}
+
+\paragraph{Diferença de Pressão:}
+\begin{align*}
+    \Delta P &= P_1 - P_2 = 101325 - 100307.79 = 1017.21 \text{ Pa}
+\end{align*}
+
+\paragraph{Cálculo da Pressão na Saída ($P_3$):}
+\begin{align*}
+    \Delta P_{recuperacao} &= \frac{1}{2}\rho(v_2^2 - v_1^2) = \frac{1}{2} \cdot 1000 \left[(1.9099)^2 - (1.3263)^2\right] = 944.26 \text{ Pa} \\
+    K_{difusor} &= 0.1240 \\
+    \Delta P_{difusor} &= K_{difusor} \cdot \frac{1}{2}\rho v_2^2 = 0.1240 \cdot \frac{1}{2} \cdot 1000 \cdot (1.9099)^2 = 226.19 \text{ Pa} \\
+    P_3 &= P_{2,fim} + \Delta P_{recuperacao} - \Delta P_{difusor} \\
+    P_3 &= 100285.91 + 944.26 - 226.19 = 101003.98 \text{ Pa}
+\end{align*}
+
+\paragraph{Perdas Totais:}
+\begin{align*}
+    \Delta P_{entrada} &= 72.95 \text{ Pa} \\
+    \Delta P_{garganta} &= 21.89 \text{ Pa} \\
+    \Delta P_{difusor} &= 226.19 \text{ Pa} \\
+    \Delta P_{total} &= 321.02 \text{ Pa} \\
+    h_L &= \frac{\Delta P_{total}}{\rho g} = \frac{321.02}{1000 \cdot 9.81} = 0.032724 \text{ m}
+\end{align*}
+
+\paragraph{Desnível Manométrico:}
+\begin{align*}
+    \Delta h &= \frac{\Delta P}{(ho_m - \rho) g} = \frac{1017.21}{(13600 - 1000) \cdot 9.81} = 0.008229 \text{ m}
+\end{align*}
+
+\paragraph{Número de Reynolds:}
+\begin{align*}
+    Re &= \frac{\rho v_1 D_1}{\mu} = \frac{1000 \cdot 1.3263 \cdot 0.12}{0.001} = 159154.94
+\end{align*}
+
+\paragraph{Geometria do Venturi:}
+\begin{align*}
+    L_{entrada} &= 0.0760 \text{ m} \\
+    L_{saida} &= 0.0760 \text{ m} \\
+    L_{total} &= L_{entrada} + L_{garganta} + L_{saida} = 0.2119 \text{ m}
+\end{align*}
+
+\subsubsection{Resumo dos Resultados}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{l|c}
+\hline
+\textbf{Grandeza} & \textbf{Valor} \\
+\hline
+$A_1$ (m²) & 0.011310 \\
+$A_2$ (m²) & 0.007854 \\
+$v_1$ (m/s) & 1.3263 \\
+$v_2$ (m/s) & 1.9099 \\
+$P_1$ (Pa) & 101325.00 \\
+$P_2$ (Pa) & 100307.79 \\
+$P_{2,fim}$ (Pa) & 100285.91 \\
+$P_3$ (Pa) & 101003.98 \\
+$\Delta P$ (Pa) & 1017.21 \\
+$\Delta h$ (m) & 0.008229 \\
+$h_L$ (m) & 0.032724 \\
+$Re$ & 159154.94 \\
+\hline
+\end{tabular}
+\caption{Resultados da simulação: Caso 4: Modo Realista - Razão de Áreas Pequena}
+\end{table}
+
+\section{Análise Comparativa}
+
+\subsection{Comparação entre Modos Ideal e Realista}
+
+A Tabela \ref{tab:comparacao} apresenta uma comparação entre os resultados obtidos nos modos ideal e realista para as mesmas condições de entrada.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Grandeza} & \textbf{Modo Ideal} & \textbf{Modo Realista} \\
+\hline
+$P_2$ (Pa) & Calculado & Calculado \\
+$P_3$ (Pa) & $P_1$ (recuperação total) & Menor que $P_1$ \\
+$h_L$ (m) & 0 & $> 0$ \\
+Perdas & Nenhuma & Entrada + Garganta + Difusor \\
+\hline
+\end{tabular}
+\caption{Comparação entre modos de operação}
+\label{tab:comparacao}
+\end{table}
+
+\subsection{Influência dos Parâmetros}
+
+\subsubsection{Influência da Razão de Diâmetros}
+
+A razão $\beta = D_2/D_1$ afeta significativamente:
+\begin{itemize}
+    \item A diferença de pressão $\Delta P$ (maior $\beta$ menor $\Delta P$)
+    \item As perdas no difusor (maior razão de áreas, maiores perdas)
+    \item A recuperação de pressão na saída
+\end{itemize}
+
+\subsubsection{Influência da Vazão}
+
+A vazão $Q$ influencia:
+\begin{itemize}
+    \item As velocidades $v_1$ e $v_2$ (proporcional)
+    \item A diferença de pressão $\Delta P$ (proporcional ao quadrado)
+    \item As perdas de carga (proporcionais ao quadrado da velocidade)
+    \item O número de Reynolds (proporcional)
+\end{itemize}
+
+\subsubsection{Influência do Fator de Atrito}
+
+O fator de atrito $f$ afeta diretamente:
+\begin{itemize}
+    \item As perdas na garganta: $h_f = f \frac{L}{D} \frac{v^2}{2g}$
+    \item A pressão final na garganta $P_{2,fim}$
+    \item A perda de carga total $h_L$
+\end{itemize}
