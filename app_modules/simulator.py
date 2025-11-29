@@ -70,13 +70,6 @@ class VenturiSimulator:
         Re = (self.rho * self.v1 * self.D1) / self.mu
         return Re
 
-    def _obter_perda_permanente_pct(self):
-        beta = self.D2 / self.D1
-
-        perda_pct = 0.28 - (0.35 * beta) + (0.18 * beta**2)
-        
-        return max(0.10, min(perda_pct, 0.30))
-    
     def _calcular_geometria_automatica(self):
         angulo_graus = 15.0
         angulo_rad = np.radians(angulo_graus)
