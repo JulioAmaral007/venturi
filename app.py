@@ -593,7 +593,7 @@ def main():
                 st.caption(f"Vazão equivalente: {Q:.4f} m³/s")
             
         # Parâmetros avançados
-        with st.expander("⚙️ Parâmetros Avançados", expanded=False):
+        with st.expander("⚙️ Parâmetros Avançados", expanded=True):
             # Dicionário de materiais (usado em ambos os modos)
             materiais_fluids = {
                 "Steel, commercial": "Aço comercial",
@@ -646,7 +646,7 @@ def main():
     f = calcular_fator_atrito(Re_calc, epsilon, D1)
     
     # Exibir informações sobre o cálculo do atrito
-    with st.expander("ℹ️ Informações do Cálculo de Atrito", expanded=False):
+    with st.expander("ℹ️ Informações do Cálculo de Atrito", expanded=True):
         if mode == 'Realista':
             # Mapeamento de nomes para exibição
             nomes_materiais = {
