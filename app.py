@@ -477,7 +477,7 @@ def main():
             
             L = st.slider(
                 "L - Comprimento da garganta (m)",
-                min_value=0.5,
+                min_value=0.1,
                 max_value=3.0,
                 value=1.0,
                 step=0.1,
@@ -592,8 +592,6 @@ def main():
                 Q = v2_input * area_garganta
                 st.caption(f"Vazão equivalente: {Q:.4f} m³/s")
             
-            delta_h = None  # Será calculado
-        
         # Parâmetros avançados
         with st.expander("⚙️ Parâmetros Avançados", expanded=False):
             # Dicionário de materiais (usado em ambos os modos)
@@ -796,8 +794,6 @@ def main():
         st.subheader("Resultados Numéricos Completos")
         st.caption(f"Detalhe completo das propriedades calculadas - Modo: {mode}. Use para relatórios ou calibrações.")
         
-        Re = sim.calcular_reynolds()
-        
         # Obter P2_fim (pode não existir em versões antigas, usar fallback)
         P2_fim = getattr(sim, 'P2_fim', sim.P2)
         P3 = getattr(sim, 'P3', sim.P1)
@@ -856,16 +852,6 @@ def main():
             st.markdown("")
             st.markdown("**ENERGIA:**")
             st.write(f"• Perda de carga total hₗ = {sim.h_L:.4f} m")
-        
-        # Indicador de regime
-        st.markdown("---")
-        st.markdown("**Regime de Escoamento:**")
-        if Re < 2300:
-            st.warning("Regime LAMINAR (Re < 2300): medições tendem a ser menos sensíveis.", icon="⚠️")
-        elif Re < 4000:
-            st.info("Regime de TRANSIÇÃO (2300 < Re < 4000): condições intermediárias, atenção aos parâmetros.", icon="🔄")
-        else:
-            st.success("Regime TURBULENTO (Re > 4000): operação típica para Venturi industriais.", icon="✅")
         
         # Informações específicas do modo
         st.markdown("---")
