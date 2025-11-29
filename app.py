@@ -623,18 +623,19 @@ def main():
                 st.info("ℹ️ No modo Ideal, as perdas são zero. O material do tubo não afeta os resultados.")
             
     # Validação com feedback visual
-    beta = D2 / D1
+    beta = D1 / D2
     if D2 >= D1:
         st.error("⚠️ Ajuste necessário: D₂ precisa ser menor que D₁ para garantir aceleração do escoamento.")
         st.stop()
-    elif beta < 0.3:
-        st.error(f"⚠️ Ajuste necessário: β = {beta:.3f} está muito baixo (mínimo recomendado: 0.3). D₂ está muito pequeno em relação a D₁.")
+    elif beta < 1:
+        st.error(f"⚠️ Ajuste necessário: β = {beta:.3f} está muito baixo (mínimo recomendado: 1.0). D₂ está maior que D₁.")
         st.stop()
-    elif beta > 0.75:
-        st.error(f"⚠️ Ajuste necessário: β = {beta:.3f} está muito alto (máximo recomendado: 0.75). D₂ está muito próximo de D₁.")
+    elif beta > 2:
+        st.error(f"⚠️ Ajuste necessário: β = {beta:.3f} está muito alto (máximo recomendado: 2.0). D₂ está muito pequeno em relação a D₁.")
         st.stop()
-    elif beta < 0.4 or beta > 0.7:
-        st.warning(f"⚠️ Atenção: β = {beta:.3f} está fora da faixa recomendada (0.4 - 0.7).")
+    elif rho_m < rho + rho*0.05: 
+        st.error(f"⚠️ Ajuste necessário: Densidade do fluido manométrico ρₘ " f"{rho_m:.1f} kg/m³ menor ou muito próxima da densidade do fluido ρ " f"{rho:.1f} kg/m³.")
+        st.stop()
     
     # Calcular número de Reynolds e fator de atrito baseado no material
     area_entrada_calc = np.pi * (D1 / 2) ** 2
