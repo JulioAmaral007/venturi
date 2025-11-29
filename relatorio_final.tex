@@ -1,23 +1,21 @@
-\documentclass[12pt,a4paper]{article}
-\usepackage[utf8]{inputenc}
-\usepackage[portuguese]{babel}
-\usepackage{amsmath}
-\usepackage{graphicx}
-\usepackage{geometry}
-\usepackage{hyperref}
-\usepackage{float}
-\usepackage{listings}
-\usepackage{xcolor}
+\documentclass{article}
 
-\geometry{
- a4paper,
- total={170mm,257mm},
- left=25mm,
- top=25mm,
-}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage[a4paper, top=3cm, bottom=2.5cm, left=3cm, right=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{makecell}
+\usepackage{indentfirst}
+\usepackage{setspace}
+\onehalfspacing
 
 \title{\textbf{Relatório Final: Simulador de Medidor de Venturi}}
-\author{Engenharia de Computação -- Mecânica dos Fluidos}
+\author{Eduardo Zambotto e Júlio Cézar}
 \date{\today}
 
 \begin{document}
@@ -29,16 +27,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 O projeto consiste em um \textbf{Simulador Interativo de Medidor de Venturi}, desenvolvido como aplicação web para modelar, simular e analisar o escoamento interno de fluidos em um tubo de Venturi. A aplicação permite que o usuário configure a geometria do medidor, selecione o fluido de trabalho e ajuste as condições de escoamento, observando imediatamente o impacto sobre pressão, velocidade, perdas de carga e leitura manométrica.
-
-Na prática, o sistema representa um \emph{medidor diferencial de pressão} utilizado para:
-\begin{itemize}
-    \item \textbf{Medição de vazão} em linhas de processo industriais;
-    \item \textbf{Estudo de escoamentos internos} em dutos circulares;
-    \item \textbf{Análise de perdas de carga permanentes} associadas ao uso de Venturi;
-    \item \textbf{Demonstrações didáticas} dos princípios de Bernoulli, continuidade e manometria.
-\end{itemize}
-
-O Venturi simulado é um duto convergente--garganta--divergente. A aceleração do fluido na garganta provoca queda de pressão estática, medida por um manômetro em U, conectando as seções de entrada e garganta. O simulador implementa tanto o \textbf{modo ideal} (sem perdas de energia) quanto o \textbf{modo realista} (com perdas por atrito e perdas localizadas).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Objetivo e Funcionalidades}
@@ -53,7 +41,7 @@ O objetivo principal do trabalho é fornecer uma \textbf{ferramenta computaciona
 
 \subsection{Funcionalidades Principais}
 
-Com base no código-fonte do projeto (\texttt{app.py}, \texttt{app\_modules/simulator.py} e \texttt{app\_modules/plots.py}), as funcionalidades principais são:
+Com base no código-fonte do projeto, as funcionalidades principais são:
 
 \begin{itemize}
     \item \textbf{Simulação em dois modos}:
@@ -69,11 +57,11 @@ Com base no código-fonte do projeto (\texttt{app.py}, \texttt{app\_modules/simu
         \item Cálculo automático das áreas $A_1$ e $A_2$ e dos comprimentos das seções convergente e divergente, assumindo ângulo típico de difusor de $15^\circ$.
     \end{itemize}
 
-    \item \textbf{Escolha do fluido e propriedades termofísicas}:
+    \item \textbf{Escolha do fluido e propriedades}:
     \begin{itemize}
         \item Seleção de fluidos reais (água, ar, etanol, glicerina, óleo, etc.);
         \item Definição da temperatura e pressão de entrada;
-        \item Cálculo automático de densidade $\rho$ e viscosidade dinâmica $\mu$ a partir de bancos de dados termodinâmicos.
+        \item Cálculo automático de densidade $\rho$ e viscosidade dinâmica $\mu$ a partir de biblioteca chamada Thermo.
     \end{itemize}
 
     \item \textbf{Condições de escoamento}:
@@ -99,7 +87,7 @@ Com base no código-fonte do projeto (\texttt{app.py}, \texttt{app\_modules/simu
 
     \item \textbf{Visualizações e resultados}:
     \begin{itemize}
-        \item Diagrama esquemático do Venturi com indicação de $P_1$, $P_2$, $P_2$ ao fim da garganta e $P_3$;
+        \item Diagrama esquemático do Venturi com indicação de $P_1$, $P_2$ (inicio da garganta), $P_2$ (fim da garganta) e $P_3$;
         \item Gráfico do perfil de pressão ao longo do medidor;
         \item Gráfico das linhas de energia (EGL) e linha piezométrica (HGL);
         \item Tabela de resultados numéricos com $Q$, $v_1$, $v_2$, $P_1$, $P_2$, $P_3$, $Re$, $h_L$ e $\Delta h$.
@@ -108,14 +96,13 @@ Com base no código-fonte do projeto (\texttt{app.py}, \texttt{app\_modules/simu
 
 \subsection{Fluxo de Uso do Usuário}
 
-O fluxo de uso, tal como implementado em \texttt{app.py}, segue as etapas:
+O fluxo de uso segue as seguintes etapas:
 \begin{enumerate}
     \item \textbf{Escolha do modo de simulação} (\emph{Ideal} ou \emph{Realista});
     \item \textbf{Definição da geometria}: seleção de $D_1$, $D_2$ e $L_{\text{garganta}}$ via \emph{sliders};
     \item \textbf{Configuração do fluido}: escolha do fluido, definição da temperatura ($^\circ$C) e da pressão de entrada $P_1$ (manométrica), com cálculo automático de $\rho$ e $\mu$;
     \item \textbf{Definição do escoamento}: seleção de uma das três formas de entrada (vazão $Q$, velocidade $v_1$ ou velocidade $v_2$), com conversão imediata entre elas pela equação de continuidade;
     \item \textbf{(Modo Realista)}: escolha do material do tubo, de onde é obtida a rugosidade absoluta $\varepsilon$ para cálculo de $f$;
-    \item \textbf{Execução da simulação}: criação de um objeto \texttt{VenturiSimulator} e chamada do método \texttt{calcular}, que processa todas as equações de mecânica dos fluidos;
     \item \textbf{Análise dos resultados}: leitura das métricas principais (vazão, velocidades, $\Delta h$) e exploração dos gráficos de geometria, perfil de pressão e linhas de energia.
 \end{enumerate}
 
@@ -123,34 +110,12 @@ O fluxo de uso, tal como implementado em \texttt{app.py}, segue as etapas:
 \section{Como a Engenharia de Computação foi Utilizada}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-A Engenharia de Computação aparece no projeto como a ponte entre os modelos matemáticos contínuos da Mecânica dos Fluidos e uma aplicação interativa utilizável por estudantes e engenheiros.
-
+O projeto aplica conhecimentos de Engenharia de Computação de três formas principais:
 \begin{itemize}
-    \item \textbf{Modelagem computacional da física}: a física do problema é encapsulada na classe \texttt{VenturiSimulator} (arquivo \texttt{simulator.py}). Os atributos do objeto representam grandezas físicas (diâmetros, áreas, velocidades, pressões, perdas de carga), e os métodos implementam diretamente as equações estudadas em sala (continuidade, Bernoulli, Darcy--Weisbach, manometria).
-
-    \item \textbf{Automação de cálculos}: o método \texttt{calcular} recebe os parâmetros de entrada (geometria, propriedades do fluido, vazão, fator de atrito) e, de forma determinística, executa todos os cálculos: áreas, velocidades, pressões $P_2$, $P_3$, perda de carga $h_L$, desnível manométrico $\Delta h$ e número de Reynolds.
-
-    \item \textbf{Pré-processamento e pós-processamento}: em \texttt{app.py} são feitos:
-    \begin{itemize}
-        \item o \emph{pré-processamento}, convertendo entradas do usuário em grandezas físicas coerentes (por exemplo, convertendo velocidade escolhida em vazão $Q$);
-        \item o \emph{pós-processamento}, organizando os resultados para exibição em métricas, tabelas e gráficos.
-    \end{itemize}
-
-    \item \textbf{Funções auxiliares de escoamento}: a função \texttt{calcular\_fator\_atrito} implementa o raciocínio de seleção de correlação para o fator de atrito:
-    \begin{itemize}
-        \item se $Re < 2300$, utiliza-se a expressão laminar $f = 64/Re$;
-        \item caso contrário, utiliza-se a biblioteca \texttt{fluids} para resolver a equação de Colebrook--White numericamente, com \emph{fallback} para uma forma explícita aproximada.
-    \end{itemize}
-
-    \item \textbf{Visualização científica}: em \texttt{plots.py} são construídos, a partir dos dados do simulador, gráficos de:
-    \begin{itemize}
-        \item \textbf{Perfil de pressão} ao longo do eixo do tubo;
-        \item \textbf{Linhas de energia e piezométrica}, decompondo a energia específica em pressão e cinética;
-        \item \textbf{Diagrama geométrico} do Venturi, com representação do manômetro em U e das pressões $P_1$, $P_2$, $P_2$ ao fim da garganta e $P_3$.
-    \end{itemize}
+    \item \textbf{Desenvolvimento de software e interface}: criação de uma aplicação web interativa usando python e streamlit que permite ao usuário ajustar parâmetros e visualizar resultados instantaneamente, com interface organizada e fácil de usar.
+    \item \textbf{Automação de cálculos e visualização}: o sistema realiza automaticamente os cálculos complexos das equações da Mecânica dos Fluidos (Bernoulli, continuidade, Darcy–Weisbach), gerando gráficos, tabelas e resultados numéricos que facilitam a compreensão dos fenômenos físicos, eliminando cálculos manuais e reduzindo erros.
+    \item \textbf{Modelagem e simulação computacional}: transformação do medidor de Venturi físico em um modelo virtual que pode ser explorado de forma segura e didática, permitindo testar diferentes cenários e configurações sem necessidade de equipamentos reais, conectando teoria e prática de forma acessível.
 \end{itemize}
-
-Assim, o foco não está em tecnologias específicas, mas em como o \textbf{pensamento computacional} estrutura o problema: definição clara de entradas, transformação em variáveis físicas, aplicação sistemática das equações e apresentação legível de resultados.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conteúdo de Fluidos Aplicado no Projeto}
@@ -162,14 +127,13 @@ Nesta seção são relacionados os principais tópicos da disciplina com sua imp
 \subsection{Definição de fluido, formas de análise e propriedades}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Para o problema do Venturi, o fluido é tratado como incompressível em regime permanente. As propriedades principais são:
-
+No projeto, em \texttt{app.py}, as propriedades são obtidas dinamicamente das bibliotecas \texttt{thermo.Chemical} e \texttt{thermo.Mixture}:
 \begin{itemize}
-    \item \textbf{Densidade} $\rho$ (kg/m$^3$): relaciona massa e volume.
-    \item \textbf{Viscosidade dinâmica} $\mu$ (Pa$\cdot$s): determina o regime de escoamento via número de Reynolds.
+    \item para líquidos como água, etanol, glicerina e óleo: \texttt{fluido = Chemical(\dots)};
+    \item para ar: \texttt{fluido = Mixture('air', T, P)}.
 \end{itemize}
 
-\textbf{No projeto}: em \texttt{app.py}, as propriedades são obtidas dinamicamente das bibliotecas \texttt{thermo.Chemical} (líquidos) e \texttt{thermo.Mixture} (ar), respeitando a dependência $\rho(T,P)$ e $\mu(T,P)$.
+O usuário escolhe temperatura (via \emph{slider}) e pressão de entrada, e o código respeita explicitamente a dependência $\rho(T,P)$ e $\mu(T,P)$, caracterizando o fluido real.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Forças hidrostáticas e empuxo (manometria)}
@@ -181,7 +145,6 @@ A equação manométrica empregada é:
 \]
 onde $\rho_m$ é a densidade do fluido manométrico, $\rho$ é a densidade do fluido em escoamento e $\Delta h$ o desnível entre colunas.
 
-\textbf{No projeto}: no método \texttt{\_calcular\_desnivel\_de\_vazao}, após calcular $\Delta P$, o simulador converte a diferença de pressão em desnível manométrico, produzindo a leitura esperada do manômetro.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Equações básicas na forma integral}
@@ -189,44 +152,62 @@ onde $\rho_m$ é a densidade do fluido manométrico, $\rho$ é a densidade do fl
 
 \textbf{Conservação de massa (Equação da Continuidade)}:
 
-Para escoamento incompressível em regime permanente:
+Para escoamento incompressível em regime permanente entre duas seções de um duto:
 \[
     Q = A_1 V_1 = A_2 V_2
 \]
 onde $Q$ é a vazão volumétrica, $A$ a área da seção transversal e $V$ a velocidade média.
 
-\textbf{No projeto}: em \texttt{VenturiSimulator.calcular}, após calcular as áreas $A_1$ e $A_2$, o método \texttt{\_calcular\_desnivel\_de\_vazao} implementa $v_1 = Q/A_1$ e $v_2 = Q/A_2$. A continuidade é aplicada na interface (\texttt{app.py}) para converter velocidade em vazão e no núcleo físico (\texttt{simulator.py}) para obter as velocidades.
+\textbf{No projeto}: em \texttt{VenturiSimulator.calcular}, após calcular as áreas
+\[
+    A_1 = \pi \left(\frac{D_1}{2}\right)^2,
+    \quad
+    A_2 = \pi \left(\frac{D_2}{2}\right)^2,
+\]
+o método \texttt{\_calcular\_desnivel\_de\_vazao} implementa o cálculo para achar a velocidade a partir da área e vazão.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Equação de Euler e Equação de Bernoulli}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Para escoamento entre as seções 1 (entrada) e 2 (garganta), em duto horizontal e fluido incompressível:
+A equação de Euler descreve, em forma diferencial, o equilíbrio de forças em um fluido em escoamento sem viscosidade. Sua integração ao longo de uma linha de corrente leva à equação de Bernoulli:
+\[
+    \frac{P}{\rho g} + \frac{V^2}{2g} + z = \text{constante}
+\]
+Para escoamento entre as seções 1 (entrada) e 2 (garganta), em duto horizontal ($z_1 = z_2$) e fluido incompressível:
 \[
     P_1 + \frac{1}{2}\rho V_1^2 = P_2 + \frac{1}{2}\rho V_2^2
 \]
 
-\textbf{No projeto (modo ideal)}: com $k_{\text{entrada}} = 0$, o código calcula:
+\par
+No modo ideal, o coeficiente de perda de entrada é $k_{\text{entrada}} = 0$, de forma que:
 \[
-    P_2 = P_1 - \frac{1}{2}\rho\left(V_2^2 - V_1^2\right)
+    P_2 = P_1 - \frac{1}{2}\rho\left(V_2^2 - V_1^2\right),
 \]
+que é exatamente a forma rearranjada da equação de Bernoulli entre 1 e 2.
 
-\textbf{Extensão com perdas}: no modo realista ($k_{\text{entrada}} = 0{,}04$), a queda de pressão entre 1 e 2 é:
+No projeto (modo ideal) o código traduz esta relação diretamente na expressão para $P_2$, em \texttt{\_calcular\_desnivel\_de\_vazao}.
+
+\par
+
+No modo realista ($k_{\text{entrada}} = 0{,}04$), o termo $(1 + k_{\text{entrada}})$ representa a inclusão de uma perda localizada na transição de diâmetro, associada a turbulências de entrada. A queda de pressão entre 1 e 2 passa a ser:
 \[
-    P_1 - P_2 = \frac{1}{2}\rho\left[(1 + k_{\text{entrada}})V_2^2 - V_1^2\right]
+    P_1 - P_2
+    = \frac{1}{2}\rho\left[(1 + k_{\text{entrada}})V_2^2 - V_1^2\right],
 \]
-correspondendo à equação de Bernoulli estendida com perda localizada.
+que corresponde à equação de Bernoulli \emph{estendida} com um termo de perda adicional $k_{\text{entrada}}V_2^2/(2g)$ em metros de coluna de fluido.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Escoamento em dutos}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-O escoamento interno em dutos circulares está sujeito a perdas de carga distribuídas e localizadas:
+O escoamento interno em dutos circulares está sujeito a perdas de carga distribuídas (devido ao atrito ao longo do comprimento) e perdas localizadas (devidas a singularidades geométricas como expansões e contrações). Em termos de energia específica:
 \[
     \frac{P_1}{\gamma} + \frac{V_1^2}{2g} + z_1
     =
     \frac{P_2}{\gamma} + \frac{V_2^2}{2g} + z_2
-    + h_f + \sum h_s
+    + h_f + \sum h_s,
 \]
 onde $h_f$ é a perda distribuída (Darcy--Weisbach) e $h_s$ as perdas localizadas.
 
@@ -234,32 +215,72 @@ onde $h_f$ é a perda distribuída (Darcy--Weisbach) e $h_s$ as perdas localizad
 \[
     Re = \frac{\rho V D}{\mu}
 \]
-No projeto, calculado em \texttt{VenturiSimulator.calcular\_reynolds} e usado para classificar o regime e escolher a correlação de $f$.
+No projeto, o número de Reynolds é calculado em \texttt{app.py} de acordo com as entradas do usuário, para classificar o regime e escolher a correlação de $f$ em \texttt{calcular\_fator\_atrito}.
 
 \paragraph{Fator de atrito de Darcy}
 
-Calculado pela função \texttt{calcular\_fator\_atrito}:
+No código, o fator de atrito é calculado pela função \\ \texttt{calcular\_fator\_atrito}:
 \begin{itemize}
-    \item Se $Re < 2300$: regime laminar, $f = 64/Re$.
-    \item Para $Re$ elevados: regime turbulento, utiliza-se a função \texttt{friction\_factor} da biblioteca \texttt{fluids}, que resolve numericamente a equação de Colebrook--White.
+    \item Se $Re < 2300$: regime laminar, utiliza-se:
+    \[
+        f = \frac{64}{Re}.
+    \]
+    \item Para $Re$ elevados: regime turbulento, é utilizada a função \texttt{friction\_factor} da biblioteca \texttt{fluids}, a qual resolve numericamente a equação de Colebrook--White em termos de $Re$ e rugosidade relativa $e/D$:
+    \[
+        \frac{1}{\sqrt{f}}
+        =
+        -2 \log_{10}
+        \left(
+            \frac{e/D}{3{,}7} + \frac{2{,}51}{Re \sqrt{f}}
+        \right).
+    \]
 \end{itemize}
 
 \paragraph{Perda distribuída na garganta}
 
-Implementada pela equação de Darcy--Weisbach:
+No método \texttt{\_calcular\_perda\_carga\_garganta}, a perda distribuída na garganta é implementada pela equação de Darcy--Weisbach:
 \[
-    h_{f,\text{garganta}} = f\,\frac{L_{\text{garganta}}}{D_2}\,\frac{V_2^2}{2g}
+    h_{f,\text{garganta}}
+    =
+    f\,\frac{L_{\text{garganta}}}{D_2}\,\frac{V_2^2}{2g}.
 \]
 
 \paragraph{Perdas localizadas}
 
-No modo realista, duas perdas localizadas são consideradas:
+No modo realista, duas perdas localizadas são consideradas explicitamente:
 \begin{itemize}
-    \item \textbf{Perda de entrada}: $k_{\text{entrada}} = 0{,}04$ no cálculo de $P_2$.
-    \item \textbf{Perda no difusor}: coeficiente $K_{\text{difusor}}$ obtido em \texttt{\_obter\_k\_difusor\_15\_graus}, baseado na razão de áreas $AR = (D_1/D_2)^2$ e correlação empírica para difusores de $15^\circ$.
+    \item \textbf{Perda de entrada}, o simulador utiliza o coeficiente \(K_L\) para entradas arredondadas (típicas de Venturis), conforme ilustrado na Figura \ref{fig:perda_entrada}.
+
+    \begin{figure}[h]
+    \centering
+    % CERTIFIQUE-SE DE FAZER O UPLOAD DA IMAGEM image_898567.png COM O NOME 'grafico_entrada.png'
+    \includegraphics[width=0.8\textwidth]{grafico_entrada.png}
+    \caption{Coeficientes de perda para contração. O simulador adota o caso com \(K \approx 0,04\). Fonte: Fox \& McDonald.}
+    \label{fig:perda_entrada}
+\end{figure}
+
+    \item \textbf{Perda no difusor}, modelada via um coeficiente $K_{\text{difusor}}$ obtido em \texttt{\_obter\_k\_difusor\_15\_graus}, que depende da razão de áreas
+    \[
+        AR = \left(\frac{D_1}{D_2}\right)^2.
+    \]
+    A implementação utiliza uma correlação empírica para o coeficiente de recuperação de pressão $c_p$ em difusores de $15^\circ$, limitando-o entre um valor realístico e o valor ideal, e define:
+    \[
+        K_{\text{difusor}} = c_{p,\text{ideal}} - c_{p,\text{real}}.
+    \]
+    O cálculo para $c_{p,\text{real}}$ é baseado no mapa de desempenho de difusores (Figura \ref{fig:perda_difusor}).
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.65\textwidth]{grafico_difusor.png}
+    \caption{Recuperação de pressão para difusores cônicos. O simulador utiliza a curva correspondente a \(2\phi = 15^\circ\). Fonte: Fox \& McDonald.}
+    \label{fig:perda_difusor}
+\end{figure}
+
+    
 \end{itemize}
 
-No balanço final de energia, a perda de carga total é obtida somando todas as perdas, resultando em $P_3 < P_1$ no modo realista.
+No balanço final de energia em \texttt{\_calcular\_desnivel\_de\_vazao}, a perda de carga total é obtida
+e, consequentemente, $P_3$ é menor do que $P_1$, representando a \textbf{perda de carga permanente} do medidor de Venturi em modo realista.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Funcionamento Técnico do Projeto}
@@ -284,13 +305,8 @@ Em seguida, o método \texttt{\_calcular\_geometria\_automatica} assume um ângu
 Com a vazão volumétrica $Q$ conhecida (diretamente ou indiretamente), as velocidades médias são:
 \[
     V_1 = \frac{Q}{A_1},\quad
-    V_2 = \frac{Q}{A_2},
+    V_2 = \frac{Q}{A_2}.
 \]
-implementadas em:
-\begin{verbatim}
-self.v1 = self.Q / self.A1
-self.v2 = self.Q / self.A2
-\end{verbatim}
 
 O número de Reynolds é calculado com base em $V_1$, densidade e viscosidade:
 \[
@@ -300,9 +316,9 @@ O número de Reynolds é calculado com base em $V_1$, densidade e viscosidade:
 \subsection{Etapa 3: Dinâmica -- Pressões e Perdas de Carga}
 
 Com $V_1$ e $V_2$ calculados, o simulador determina a pressão na garganta $P_2$ a partir de Bernoulli (com ou sem termo de perda de entrada):
-\begin{verbatim}
-self.P2 = self.P1 - 0.5 * self.rho * ((self.v2**2 * (1 + k_entrada)) - self.v1**2)
-\end{verbatim}
+\begin{equation}
+P_2 = P_1 - \frac{1}{2} \rho \left[ v_2^2 (1 + k_{\text{entrada}}) - v_1^2 \right]
+\end{equation}
 
 No modo ideal, considera-se que não há mais perdas:
 \begin{itemize}
@@ -318,19 +334,6 @@ No modo realista, o cálculo segue:
     \item cálculo da perda no difusor via $K_{\text{difusor}}$;
     \item obtenção da pressão de saída $P_3$ considerando recuperação menos perdas.
 \end{enumerate}
-
-Em notação de código, essa etapa está sintetizada em:
-\begin{verbatim}
-recuperacao_dinamica = 0.5 * self.rho * (self.v2**2 - self.v1**2)
-K_difusor = self._obter_k_difusor_15_graus()
-perda_difusor_Pa = K_difusor * (0.5 * self.rho * self.v2**2)
-self.P3 = self.P2_fim + recuperacao_dinamica - perda_difusor_Pa
-\end{verbatim}
-e a perda de carga total resulta de:
-\begin{verbatim}
-perda_total_Pa = perda_entrada_Pa + perda_garganta_Pa + perda_difusor_Pa
-self.h_L = perda_total_Pa / (self.rho * self.g)
-\end{verbatim}
 
 \subsection{Etapa 4: Manometria e Geração de Gráficos}
 
@@ -397,39 +400,20 @@ Nessa condição:
 \textbf{Interpretação física}: o sistema demonstra como a viscosidade e as rugosidades reais convertem parte da energia mecânica em calor, resultando em perda de carga permanente no Venturi.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Limitações e Possíveis Extensões}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Embora o simulador implemente de forma consistente os conceitos principais de Mecânica dos Fluidos para escoamento interno em Venturi, algumas simplificações são assumidas:
-\begin{itemize}
-    \item Escoamento unidimensional, com velocidades médias uniformes em cada seção;
-    \item Fluido tratado como incompressível, mesmo para gases em certas faixas de pressão;
-    \item Curvas empíricas para o difusor são válidas para um intervalo de geometrias (ângulo fixo de $15^\circ$);
-    \item Não há modelagem explícita de cavitação (embora o usuário possa identificar pressões muito baixas via $P_2$).
-\end{itemize}
-
-Como trabalhos futuros, o projeto poderia ser estendido para:
-\begin{itemize}
-    \item incluir compressibilidade em altas velocidades (número de Mach relevante);
-    \item modelar outros medidores diferenciais (placa de orifício, bocal);
-    \item integrar rotinas de calibração experimental, comparando dados de laboratório com o simulador;
-    \item adicionar análise de incertezas nas medições.
-\end{itemize}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusão}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 O \textbf{Simulador Interativo de Medidor de Venturi} integra, de forma direta, os conceitos de Mecânica dos Fluidos com a prática da Engenharia de Computação. A partir de um conjunto de entradas físicas, o sistema aplica automaticamente as equações de continuidade, Bernoulli estendida, Darcy--Weisbach, manometria e correlações para fator de atrito, produzindo resultados numéricos e gráficos que representam o comportamento realista do escoamento.
 
-Do ponto de vista didático, o projeto permite:
-\begin{itemize}
-    \item visualizar o impacto da razão $\beta = D_2/D_1$ na sensibilidade do medidor;
-    \item compreender como o número de Reynolds influencia o cálculo de $f$ e as perdas de carga;
-    \item relacionar a queda de pressão à leitura de um manômetro em U;
-    \item comparar diretamente cenários ideais e reais.
-\end{itemize}
-
 Do ponto de vista da Engenharia de Computação, o trabalho mostra como um modelo físico pode ser encapsulado em estruturas de dados e algoritmos claros, resultando em uma ferramenta interativa que aproxima teoria e prática no estudo de escoamentos em dutos.
+
+\begin{thebibliography}{9}
+
+\bibitem{fox}
+FOX, Robert W.; MCDONALD, Alan T.; PRITCHARD, Philip J.
+\textit{Introdução à Mecânica dos Fluidos}.
+6. ed. Rio de Janeiro: LTC, 2006.
+
+\end{thebibliography}
 
 \end{document}
