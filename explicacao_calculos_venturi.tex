@@ -1228,18 +1228,18 @@ Esta seção apresenta simulações numéricas detalhadas para diferentes casos 
 \subsubsection{Parâmetros de Entrada}
 
 \begin{itemize}
+    \item Modo de operação: \textbf{Ideal} (sem atrito, sem perdas)
     \item Diâmetro de entrada: $D_1 = 0.1$ m
     \item Diâmetro da garganta: $D_2 = 0.05$ m
-    \item Comprimento da garganta: $L_{garganta} = 0.05$ m
-    \item Densidade do fluido: $\rho = 1000$ kg/m³
+    \item Comprimento da garganta: $L_{garganta} = 0.5$ m
+    \item Fluido selecionado: Água (densidade $\rho$ e viscosidade $\mu$ calculadas automaticamente)
+    \item Temperatura: $T = 20$ °C
+    \item Pressão na entrada: $P_1 = 0$ Pa (manométricos, equivalente a pressão atmosférica)
     \item Densidade do fluido manométrico: $\rho_m = 13600$ kg/m³
-    \item Vazão volumétrica: $Q = 0.01$ m³/s
-    \item Fator de atrito: $f$ (não utilizado no modo ideal - sem atrito)
-    \item Coeficiente de descarga: $C_d = 1.0$
-    \item Viscosidade dinâmica: $\mu = 0.001$ Pa·s
-    \item Pressão na entrada: $P_1 = 101325$ Pa
-    \item Modo de operação: \textbf{Ideal} (sem atrito, sem perdas)
+    \item Variável de entrada: Vazão volumétrica $Q = 0.01$ m³/s
 \end{itemize}
+
+\textbf{Nota:} As propriedades do fluido (densidade $\rho$ e viscosidade dinâmica $\mu$) são calculadas automaticamente pela biblioteca \texttt{thermo} com base no fluido selecionado, temperatura e pressão. O fator de atrito $f$ é calculado automaticamente no modo Realista com base no material do tubo, número de Reynolds e rugosidade.
 
 \subsubsection{Cálculos Intermediários}
 
@@ -1370,7 +1370,7 @@ Modo ideal: $P_3 = P_1 = 101325.00$ Pa (recuperação total de pressão, sem per
 \begin{align*}
     L_{entrada} &= 0.1899 \text{ m} \\
     L_{saida} &= 0.1899 \text{ m} \\
-    L_{total} &= L_{entrada} + L_{garganta} + L_{saida} = 0.4298 \text{ m}
+    L_{total} &= L_{entrada} + L_{garganta} + L_{saida} = 0.8798 \text{ m}
 \end{align*}
 
 \subsubsection{Resumo dos Resultados}
@@ -1402,18 +1402,19 @@ $Re$ & 127323.95 \\
 \subsubsection{Parâmetros de Entrada}
 
 \begin{itemize}
+    \item Modo de operação: \textbf{Realista}
     \item Diâmetro de entrada: $D_1 = 0.1$ m
     \item Diâmetro da garganta: $D_2 = 0.05$ m
-    \item Comprimento da garganta: $L_{garganta} = 0.05$ m
-    \item Densidade do fluido: $\rho = 1000$ kg/m³
+    \item Comprimento da garganta: $L_{garganta} = 0.5$ m
+    \item Fluido selecionado: Água (densidade $\rho$ e viscosidade $\mu$ calculadas automaticamente)
+    \item Temperatura: $T = 20$ °C
+    \item Pressão na entrada: $P_1 = 0$ Pa (manométricos, equivalente a pressão atmosférica)
     \item Densidade do fluido manométrico: $\rho_m = 13600$ kg/m³
-    \item Vazão volumétrica: $Q = 0.01$ m³/s
-    \item Fator de atrito: $f = 0.02$
-    \item Coeficiente de descarga: $C_d = 0.98$
-    \item Viscosidade dinâmica: $\mu = 0.001$ Pa·s
-    \item Pressão na entrada: $P_1 = 101325$ Pa
-    \item Modo de operação: \textbf{Realista}
+    \item Variável de entrada: Vazão volumétrica $Q = 0.01$ m³/s
+    \item Material do tubo: Aço comercial (fator de atrito $f$ calculado automaticamente)
 \end{itemize}
+
+\textbf{Nota:} As propriedades do fluido (densidade $\rho$ e viscosidade dinâmica $\mu$) são calculadas automaticamente pela biblioteca \texttt{thermo} com base no fluido selecionado, temperatura e pressão. O fator de atrito $f$ é calculado automaticamente no modo Realista com base no material do tubo, número de Reynolds e rugosidade.
 
 \subsubsection{Cálculos Intermediários}
 
@@ -1504,13 +1505,13 @@ Esta diferença corresponde exatamente à perda na entrada: $\Delta P_{entrada} 
 \paragraph{Perdas na Garganta:}
 \begin{align*}
     h_{f,garganta} &= f \frac{L_{garganta}}{D_2} \frac{v_2^2}{2g} \\
-    h_{f,garganta} &= 0.02 \cdot \frac{0.05}{0.05} \cdot \frac{(5.0930)^2}{2 \cdot 9.81} = 0.026441 \text{ m} \\
-    \Delta P_{garganta} &= h_{f,garganta} \cdot \rho \cdot g = 0.026441 \cdot 1000 \cdot 9.81 = 259.38 \text{ Pa}
+    h_{f,garganta} &= 0.02 \cdot \frac{0.5}{0.05} \cdot \frac{(5.0930)^2}{2 \cdot 9.81} = 0.264406 \text{ m} \\
+    \Delta P_{garganta} &= h_{f,garganta} \cdot \rho \cdot g = 0.264406 \cdot 1000 \cdot 9.81 = 2593.82 \text{ Pa}
 \end{align*}
 
 \paragraph{Pressão Final na Garganta:}
 \begin{align*}
-    P_{2,fim} &= P_2 - \Delta P_{garganta} = 88647.69 - 259.38 = 88388.31 \text{ Pa}
+    P_{2,fim} &= P_2 - \Delta P_{garganta} = 88647.69 - 2593.82 = 86053.87 \text{ Pa}
 \end{align*}
 
 \paragraph{Cálculo da Pressão na Saída ($P_3$):}
@@ -1519,16 +1520,16 @@ Esta diferença corresponde exatamente à perda na entrada: $\Delta P_{entrada} 
     K_{difusor} &= 0.2940 \\
     \Delta P_{difusor} &= K_{difusor} \cdot \frac{1}{2}\rho v_2^2 = 0.2940 \cdot \frac{1}{2} \cdot 1000 \cdot (5.0930)^2 = 3812.92 \text{ Pa} \\
     P_3 &= P_{2,fim} + \Delta P_{recuperacao} - \Delta P_{difusor} \\
-    P_3 &= 88388.31 + 12158.54 - 3812.92 = 96733.93 \text{ Pa}
+    P_3 &= 86053.87 + 12158.54 - 3812.92 = 94399.49 \text{ Pa}
 \end{align*}
 
 \paragraph{Perdas Totais:}
 \begin{align*}
     \Delta P_{entrada} &= k_{entrada} \cdot \frac{1}{2}\rho v_2^2 = 0.04 \cdot \frac{1}{2} \cdot 1000 \cdot (5.0930)^2 = 518.76 \text{ Pa} \\
-    \Delta P_{garganta} &= 259.38 \text{ Pa} \\
+    \Delta P_{garganta} &= 2593.82 \text{ Pa} \\
     \Delta P_{difusor} &= 3812.92 \text{ Pa} \\
-    \Delta P_{total} &= 4591.07 \text{ Pa} \\
-    h_L &= \frac{\Delta P_{total}}{\rho g} = \frac{4591.07}{1000 \cdot 9.81} = 0.467999 \text{ m}
+    \Delta P_{total} &= 6925.50 \text{ Pa} \\
+    h_L &= \frac{\Delta P_{total}}{\rho g} = \frac{6925.50}{1000 \cdot 9.81} = 0.705964 \text{ m}
 \end{align*}
 
 \paragraph{Desnível Manométrico:}
@@ -1550,11 +1551,11 @@ $v_1$ (m/s) & 1.2732 \\
 $v_2$ (m/s) & 5.0930 \\
 $P_1$ (Pa) & 101325.00 \\
 $P_2$ (Pa) & 88647.69 \\
-$P_{2,fim}$ (Pa) & 88388.31 \\
-$P_3$ (Pa) & 96733.93 \\
+$P_{2,fim}$ (Pa) & 86053.87 \\
+$P_3$ (Pa) & 94399.49 \\
 $\Delta P$ (Pa) & 12677.31 \\
 $\Delta h$ (m) & 0.102562 \\
-$h_L$ (m) & 0.467999 \\
+$h_L$ (m) & 0.705964 \\
 $Re$ & 127323.95 \\
 \hline
 \end{tabular}
@@ -1566,18 +1567,19 @@ $Re$ & 127323.95 \\
 \subsubsection{Parâmetros de Entrada}
 
 \begin{itemize}
+    \item Modo de operação: \textbf{Realista}
     \item Diâmetro de entrada: $D_1 = 0.15$ m
     \item Diâmetro da garganta: $D_2 = 0.075$ m
-    \item Comprimento da garganta: $L_{garganta} = 0.08$ m
-    \item Densidade do fluido: $\rho = 1000$ kg/m³
+    \item Comprimento da garganta: $L_{garganta} = 0.5$ m
+    \item Fluido selecionado: Água (densidade $\rho$ e viscosidade $\mu$ calculadas automaticamente)
+    \item Temperatura: $T = 20$ °C
+    \item Pressão na entrada: $P_1 = 200000$ Pa (manométricos)
     \item Densidade do fluido manométrico: $\rho_m = 13600$ kg/m³
-    \item Vazão volumétrica: $Q = 0.025$ m³/s (alta vazão)
-    \item Fator de atrito: $f = 0.018$
-    \item Coeficiente de descarga: $C_d = 0.98$
-    \item Viscosidade dinâmica: $\mu = 0.001$ Pa·s
-    \item Pressão na entrada: $P_1 = 200000$ Pa
-    \item Modo de operação: \textbf{Realista}
+    \item Variável de entrada: Vazão volumétrica $Q = 0.025$ m³/s (alta vazão)
+    \item Material do tubo: Aço comercial (fator de atrito $f$ calculado automaticamente)
 \end{itemize}
+
+\textbf{Nota:} As propriedades do fluido (densidade $\rho$ e viscosidade dinâmica $\mu$) são calculadas automaticamente pela biblioteca \texttt{thermo} com base no fluido selecionado, temperatura e pressão. O fator de atrito $f$ é calculado automaticamente no modo Realista com base no material do tubo, número de Reynolds e rugosidade.
 
 \subsubsection{Resultados Principais}
 
@@ -1593,11 +1595,11 @@ $v_1$ (m/s) & 1.4147 \\
 $v_2$ (m/s) & 5.6588 \\
 $P_1$ (Pa) & 200000.00 \\
 $P_2$ (Pa) & 184349.00 \\
-$P_{2,fim}$ (Pa) & 184041.59 \\
-$P_3$ (Pa) & 194344.83 \\
+$P_{2,fim}$ (Pa) & 182427.65 \\
+$P_3$ (Pa) & 192730.89 \\
 $\Delta P$ (Pa) & 15651.00 \\
 $\Delta h$ (m) & 0.126620 \\
-$h_L$ (m) & 0.576470 \\
+$h_L$ (m) & 0.740989 \\
 $Re$ & 212206.59 \\
 \hline
 \end{tabular}
@@ -1617,18 +1619,19 @@ $Re$ & 212206.59 \\
 \subsubsection{Parâmetros de Entrada}
 
 \begin{itemize}
+    \item Modo de operação: \textbf{Realista}
     \item Diâmetro de entrada: $D_1 = 0.12$ m
     \item Diâmetro da garganta: $D_2 = 0.10$ m (razão $\beta = 0.833$)
-    \item Comprimento da garganta: $L_{garganta} = 0.06$ m
-    \item Densidade do fluido: $\rho = 1000$ kg/m³
+    \item Comprimento da garganta: $L_{garganta} = 0.5$ m
+    \item Fluido selecionado: Água (densidade $\rho$ e viscosidade $\mu$ calculadas automaticamente)
+    \item Temperatura: $T = 20$ °C
+    \item Pressão na entrada: $P_1 = 0$ Pa (manométricos, equivalente a pressão atmosférica)
     \item Densidade do fluido manométrico: $\rho_m = 13600$ kg/m³
-    \item Vazão volumétrica: $Q = 0.015$ m³/s
-    \item Fator de atrito: $f = 0.02$
-    \item Coeficiente de descarga: $C_d = 0.98$
-    \item Viscosidade dinâmica: $\mu = 0.001$ Pa·s
-    \item Pressão na entrada: $P_1 = 101325$ Pa
-    \item Modo de operação: \textbf{Realista}
+    \item Variável de entrada: Vazão volumétrica $Q = 0.015$ m³/s
+    \item Material do tubo: Aço comercial (fator de atrito $f$ calculado automaticamente)
 \end{itemize}
+
+\textbf{Nota:} As propriedades do fluido (densidade $\rho$ e viscosidade dinâmica $\mu$) são calculadas automaticamente pela biblioteca \texttt{thermo} com base no fluido selecionado, temperatura e pressão. O fator de atrito $f$ é calculado automaticamente no modo Realista com base no material do tubo, número de Reynolds e rugosidade.
 
 \subsubsection{Resultados Principais}
 
@@ -1644,11 +1647,11 @@ $v_1$ (m/s) & 1.3263 \\
 $v_2$ (m/s) & 1.9099 \\
 $P_1$ (Pa) & 101325.00 \\
 $P_2$ (Pa) & 100307.79 \\
-$P_{2,fim}$ (Pa) & 100285.91 \\
-$P_3$ (Pa) & 101003.98 \\
+$P_{2,fim}$ (Pa) & 100125.41 \\
+$P_3$ (Pa) & 100843.48 \\
 $\Delta P$ (Pa) & 1017.21 \\
 $\Delta h$ (m) & 0.008229 \\
-$h_L$ (m) & 0.032724 \\
+$h_L$ (m) & 0.049084 \\
 $Re$ & 159154.94 \\
 \hline
 \end{tabular}
@@ -1676,8 +1679,8 @@ A Tabela \ref{tab:comparacao} apresenta uma comparação entre os resultados obt
 \textbf{Grandeza} & \textbf{Modo Ideal} & \textbf{Modo Realista} \\
 \hline
 $P_2$ (Pa) & 89166.46 & 88647.69 \\
-$P_3$ (Pa) & 101325.00 (recuperação total) & 96733.93 (perda de 4591 Pa) \\
-$h_L$ (m) & 0.000000 & 0.467999 \\
+$P_3$ (Pa) & 101325.00 (recuperação total) & 94399.49 (perda de 6925 Pa) \\
+$h_L$ (m) & 0.000000 & 0.705964 \\
 $\Delta P$ (Pa) & 12158.54 & 12677.31 \\
 $\Delta h$ (m) & 0.098365 & 0.102562 \\
 Perdas & Nenhuma & Entrada + Garganta + Difusor \\
@@ -1690,8 +1693,8 @@ Perdas & Nenhuma & Entrada + Garganta + Difusor \\
 \textbf{Principais diferenças:}
 \begin{itemize}
     \item No modo ideal, $P_3 = P_1$ (recuperação total de pressão)
-    \item No modo realista, há uma perda permanente de $P_1 - P_3 = 4591$ Pa
-    \item A perda de carga total no modo realista é $h_L = 0.468$ m
+    \item No modo realista, há uma perda permanente de $P_1 - P_3 = 6925$ Pa
+    \item A perda de carga total no modo realista é $h_L = 0.706$ m
     \item A diferença de pressão é ligeiramente maior no modo realista devido às perdas na entrada
 \end{itemize}
 

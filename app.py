@@ -665,6 +665,8 @@ def main():
             st.write(f"**Coeficiente de atrito calculado:** f = {f:.4f}")
             if Re_calc < 2300:
                 st.caption("Regime laminar: f = 64/Re")
+            elif Re_calc < 4000:
+                st.caption("Regime de transição: Equação de Colebrook-White")
             else:
                 st.caption("Regime turbulento: Equação de Colebrook-White")
         else:

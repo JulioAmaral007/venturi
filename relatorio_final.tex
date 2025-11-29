@@ -162,32 +162,18 @@ Nesta seção são relacionados os principais tópicos da disciplina com sua imp
 \subsection{Definição de fluido, formas de análise e propriedades}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\textbf{Conceito resumido}: um fluido é modelado como meio contínuo que sofre deformação contínua sob ação de tensões de cisalhamento. Para o problema do Venturi, o fluido é tratado como incompressível em regime permanente.
+Para o problema do Venturi, o fluido é tratado como incompressível em regime permanente. As propriedades principais são:
 
-As propriedades principais para o escoamento interno em dutos são:
 \begin{itemize}
-    \item \textbf{Densidade} $\rho$ (kg/m$^3$): relaciona massa e volume e aparece em todos os termos de inércia e energia.
-    \item \textbf{Viscosidade dinâmica} $\mu$ (Pa$\cdot$s): quantifica a resistência interna ao cisalhamento; determina o regime de escoamento via número de Reynolds.
+    \item \textbf{Densidade} $\rho$ (kg/m$^3$): relaciona massa e volume.
+    \item \textbf{Viscosidade dinâmica} $\mu$ (Pa$\cdot$s): determina o regime de escoamento via número de Reynolds.
 \end{itemize}
 
-\textbf{No projeto}: em \texttt{app.py}, as propriedades são obtidas dinamicamente das bibliotecas \texttt{thermo.Chemical} e \texttt{thermo.Mixture}:
-\begin{itemize}
-    \item para líquidos como água, etanol, glicerina e óleo: \texttt{fluido = Chemical(\dots)};
-    \item para ar: \texttt{fluido = Mixture('air', T, P)}.
-\end{itemize}
-Em seguida:
-\begin{verbatim}
-rho = fluido.rho
-mu  = fluido.mu
-\end{verbatim}
-
-O usuário escolhe temperatura (via \emph{slider}) e pressão de entrada, e o código respeita explicitamente a dependência $\rho(T,P)$ e $\mu(T,P)$, caracterizando o fluido real.
+\textbf{No projeto}: em \texttt{app.py}, as propriedades são obtidas dinamicamente das bibliotecas \texttt{thermo.Chemical} (líquidos) e \texttt{thermo.Mixture} (ar), respeitando a dependência $\rho(T,P)$ e $\mu(T,P)$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Forças hidrostáticas e empuxo (manometria)}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\textbf{Conceito resumido}: em um fluido em repouso, a variação de pressão com a profundidade está relacionada ao peso específico $\gamma = \rho g$. Em manômetros diferenciais em U, a diferença de pressão entre dois pontos de um escoamento se traduz em um desnível de coluna de fluido manométrico.
 
 A equação manométrica empregada é:
 \[
@@ -195,13 +181,7 @@ A equação manométrica empregada é:
 \]
 onde $\rho_m$ é a densidade do fluido manométrico, $\rho$ é a densidade do fluido em escoamento e $\Delta h$ o desnível entre colunas.
 
-\textbf{No projeto}: no método \texttt{\_calcular\_desnivel\_de\_vazao} da classe \texttt{VenturiSimulator}, após calcular a diferença de pressão $\Delta P$ entre entrada e garganta:
-\begin{verbatim}
-self.delta_P = self.P1 - self.P2
-self.delta_h = self.delta_P / ((self.rho_m - self.rho) * self.g)
-\end{verbatim}
-
-Assim, o simulador produz diretamente a leitura esperada do manômetro em unidades de comprimento (m ou cm), permitindo comparar teoria (equação manométrica) e prática (leitura simulada).
+\textbf{No projeto}: no método \texttt{\_calcular\_desnivel\_de\_vazao}, após calcular $\Delta P$, o simulador converte a diferença de pressão em desnível manométrico, produzindo a leitura esperada do manômetro.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Equações básicas na forma integral}
@@ -209,72 +189,44 @@ Assim, o simulador produz diretamente a leitura esperada do manômetro em unidad
 
 \textbf{Conservação de massa (Equação da Continuidade)}:
 
-Para escoamento incompressível em regime permanente entre duas seções de um duto:
+Para escoamento incompressível em regime permanente:
 \[
     Q = A_1 V_1 = A_2 V_2
 \]
 onde $Q$ é a vazão volumétrica, $A$ a área da seção transversal e $V$ a velocidade média.
 
-\textbf{No projeto}: em \texttt{VenturiSimulator.calcular}, após calcular as áreas
-\[
-    A_1 = \pi \left(\frac{D_1}{2}\right)^2,
-    \quad
-    A_2 = \pi \left(\frac{D_2}{2}\right)^2,
-\]
-o método \texttt{\_calcular\_desnivel\_de\_vazao} implementa:
-\begin{verbatim}
-self.v1 = self.Q / self.A1
-self.v2 = self.Q / self.A2
-\end{verbatim}
-
-Ou seja, a continuidade é aplicada duas vezes:
-\begin{itemize}
-    \item na interface (\texttt{app.py}) para converter velocidade escolhida em vazão $Q$;
-    \item no núcleo físico (\texttt{simulator.py}) para obter as velocidades $v_1$ e $v_2$ a partir de $Q$.
-\end{itemize}
-
-\textbf{Conservação de energia global}: será detalhada na subseção de Bernoulli, pois é justamente a equação estendida de energia que o projeto implementa para obter as pressões nas diferentes seções.
+\textbf{No projeto}: em \texttt{VenturiSimulator.calcular}, após calcular as áreas $A_1$ e $A_2$, o método \texttt{\_calcular\_desnivel\_de\_vazao} implementa $v_1 = Q/A_1$ e $v_2 = Q/A_2$. A continuidade é aplicada na interface (\texttt{app.py}) para converter velocidade em vazão e no núcleo físico (\texttt{simulator.py}) para obter as velocidades.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Equação de Euler e Equação de Bernoulli}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\textbf{Conceito resumido}: a equação de Euler descreve, em forma diferencial, o equilíbrio de forças em um fluido em escoamento sem viscosidade. Sua integração ao longo de uma linha de corrente leva à equação de Bernoulli:
-\[
-    \frac{P}{\rho g} + \frac{V^2}{2g} + z = \text{constante}
-\]
-Para escoamento entre as seções 1 (entrada) e 2 (garganta), em duto horizontal ($z_1 = z_2$) e fluido incompressível:
+Para escoamento entre as seções 1 (entrada) e 2 (garganta), em duto horizontal e fluido incompressível:
 \[
     P_1 + \frac{1}{2}\rho V_1^2 = P_2 + \frac{1}{2}\rho V_2^2
 \]
 
-\textbf{No projeto (modo ideal)}: o código traduz esta relação diretamente na expressão para $P_2$. Em \texttt{\_calcular\_desnivel\_de\_vazao}:
-\begin{verbatim}
-self.P2 = self.P1 - 0.5 * self.rho * ((self.v2**2 * (1 + k_entrada)) - self.v1**2)
-\end{verbatim}
-No modo ideal, o coeficiente de perda de entrada é $k_{\text{entrada}} = 0$, de forma que:
+\textbf{No projeto (modo ideal)}: com $k_{\text{entrada}} = 0$, o código calcula:
 \[
-    P_2 = P_1 - \frac{1}{2}\rho\left(V_2^2 - V_1^2\right),
+    P_2 = P_1 - \frac{1}{2}\rho\left(V_2^2 - V_1^2\right)
 \]
-que é exatamente a forma rearranjada da equação de Bernoulli entre 1 e 2.
 
-\textbf{Extensão com perdas}: no modo realista ($k_{\text{entrada}} = 0{,}04$), o termo $(1 + k_{\text{entrada}})$ representa a inclusão de uma perda localizada na transição de diâmetro, associada a turbulências de entrada. A queda de pressão entre 1 e 2 passa a ser:
+\textbf{Extensão com perdas}: no modo realista ($k_{\text{entrada}} = 0{,}04$), a queda de pressão entre 1 e 2 é:
 \[
-    P_1 - P_2
-    = \frac{1}{2}\rho\left[(1 + k_{\text{entrada}})V_2^2 - V_1^2\right],
+    P_1 - P_2 = \frac{1}{2}\rho\left[(1 + k_{\text{entrada}})V_2^2 - V_1^2\right]
 \]
-que corresponde à equação de Bernoulli \emph{estendida} com um termo de perda adicional $k_{\text{entrada}}V_2^2/(2g)$ em metros de coluna de fluido.
+correspondendo à equação de Bernoulli estendida com perda localizada.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Escoamento em dutos}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\textbf{Conceito resumido}: o escoamento interno em dutos circulares está sujeito a perdas de carga distribuídas (devido ao atrito ao longo do comprimento) e perdas localizadas (devidas a singularidades geométricas como expansões, contrações, curvas e válvulas). Em termos de energia específica:
+O escoamento interno em dutos circulares está sujeito a perdas de carga distribuídas e localizadas:
 \[
     \frac{P_1}{\gamma} + \frac{V_1^2}{2g} + z_1
     =
     \frac{P_2}{\gamma} + \frac{V_2^2}{2g} + z_2
-    + h_f + \sum h_s,
+    + h_f + \sum h_s
 \]
 onde $h_f$ é a perda distribuída (Darcy--Weisbach) e $h_s$ as perdas localizadas.
 
@@ -282,69 +234,32 @@ onde $h_f$ é a perda distribuída (Darcy--Weisbach) e $h_s$ as perdas localizad
 \[
     Re = \frac{\rho V D}{\mu}
 \]
-No projeto, o número de Reynolds é calculado em \texttt{VenturiSimulator.calcular\_reynolds}:
-\begin{verbatim}
-Re = (self.rho * self.v1 * self.D1) / self.mu
-\end{verbatim}
-e usado em \texttt{app.py} para classificar o regime e escolher a correlação de $f$ em \texttt{calcular\_fator\_atrito}.
+No projeto, calculado em \texttt{VenturiSimulator.calcular\_reynolds} e usado para classificar o regime e escolher a correlação de $f$.
 
 \paragraph{Fator de atrito de Darcy}
 
-No código, o fator de atrito é calculado pela função \texttt{calcular\_fator\_atrito}:
+Calculado pela função \texttt{calcular\_fator\_atrito}:
 \begin{itemize}
-    \item Se $Re < 2300$: regime laminar, utiliza-se:
-    \[
-        f = \frac{64}{Re}.
-    \]
-    \item Para $Re$ elevados: regime turbulento, é utilizada a função \texttt{friction\_factor} da biblioteca \texttt{fluids}, a qual resolve numericamente a equação de Colebrook--White em termos de $Re$ e rugosidade relativa $e/D$:
-    \[
-        \frac{1}{\sqrt{f}}
-        =
-        -2 \log_{10}
-        \left(
-            \frac{e/D}{3{,}7} + \frac{2{,}51}{Re \sqrt{f}}
-        \right).
-    \]
+    \item Se $Re < 2300$: regime laminar, $f = 64/Re$.
+    \item Para $Re$ elevados: regime turbulento, utiliza-se a função \texttt{friction\_factor} da biblioteca \texttt{fluids}, que resolve numericamente a equação de Colebrook--White.
 \end{itemize}
 
 \paragraph{Perda distribuída na garganta}
 
-No método \texttt{\_calcular\_perda\_carga\_garganta}, a perda distribuída na garganta é implementada pela equação de Darcy--Weisbach:
+Implementada pela equação de Darcy--Weisbach:
 \[
-    h_{f,\text{garganta}}
-    =
-    f\,\frac{L_{\text{garganta}}}{D_2}\,\frac{V_2^2}{2g}.
+    h_{f,\text{garganta}} = f\,\frac{L_{\text{garganta}}}{D_2}\,\frac{V_2^2}{2g}
 \]
-O código correspondente é:
-\begin{verbatim}
-h_f_garganta = self.f * (self.L_garganta / self.D2) * (self.v2**2 / (2 * self.g))
-\end{verbatim}
-e a perda em pressão (Pa) é obtida por:
-\begin{verbatim}
-perda_garganta_Pa = h_f_garganta * self.rho * self.g
-\end{verbatim}
 
 \paragraph{Perdas localizadas}
 
-No modo realista, duas perdas localizadas são consideradas explicitamente:
+No modo realista, duas perdas localizadas são consideradas:
 \begin{itemize}
-    \item \textbf{Perda de entrada}, por mudança brusca na seção convergente, modelada via $k_{\text{entrada}} = 0{,}04$ no cálculo de $P_2$;
-    \item \textbf{Perda no difusor}, modelada via um coeficiente $K_{\text{difusor}}$ obtido em \texttt{\_obter\_k\_difusor\_15\_graus}, que depende da razão de áreas
-    \[
-        AR = \left(\frac{D_1}{D_2}\right)^2.
-    \]
-    A implementação utiliza uma correlação empírica para o coeficiente de recuperação de pressão $c_p$ em difusores de $15^\circ$, limitando-o entre um valor realístico e o valor ideal, e define:
-    \[
-        K_{\text{difusor}} = c_{p,\text{ideal}} - c_{p,\text{real}}.
-    \]
+    \item \textbf{Perda de entrada}: $k_{\text{entrada}} = 0{,}04$ no cálculo de $P_2$.
+    \item \textbf{Perda no difusor}: coeficiente $K_{\text{difusor}}$ obtido em \texttt{\_obter\_k\_difusor\_15\_graus}, baseado na razão de áreas $AR = (D_1/D_2)^2$ e correlação empírica para difusores de $15^\circ$.
 \end{itemize}
 
-No balanço final de energia em \texttt{\_calcular\_desnivel\_de\_vazao}, a perda de carga total é obtida por:
-\begin{verbatim}
-perda_total_Pa = perda_entrada_Pa + perda_garganta_Pa + perda_difusor_Pa
-self.h_L = perda_total_Pa / (self.rho * self.g)
-\end{verbatim}
-e, consequentemente, $P_3$ é menor do que $P_1$, representando a \textbf{perda de carga permanente} do medidor de Venturi em modo realista.
+No balanço final de energia, a perda de carga total é obtida somando todas as perdas, resultando em $P_3 < P_1$ no modo realista.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Funcionamento Técnico do Projeto}
