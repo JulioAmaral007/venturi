@@ -1,0 +1,174 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage{amsmath}
+\usepackage{geometry}
+
+\geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=25mm,
+ top=25mm,
+}
+
+\title{Roteiro de Apresentação Oral\\[0.5em]
+\large Simulador de Medidor de Venturi}
+\author{Engenharia de Computação -- Mecânica dos Fluidos}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+% Sugestão: 10 a 15 minutos no total.
+
+\section*{1. Introdução ao Projeto (1--2 min)}
+\begin{itemize}
+    \item Apresentar o tema: \textbf{simulador interativo de medidor de Venturi} para estudo de escoamento em dutos.
+    \item Explicar rapidamente o que é um Venturi: duto convergente--garganta--divergente usado como \textbf{medidor de vazão} por diferença de pressão.
+    \item Destacar o objetivo: conectar \textbf{Mecânica dos Fluidos} com \textbf{Engenharia de Computação}, transformando as equações em uma ferramenta de simulação em tempo real.
+\end{itemize}
+
+\section*{2. Conceitos de Fluidos Utilizados (3--4 min)}
+\subsection*{2.1 Propriedades dos fluidos}
+\begin{itemize}
+    \item Relembrar rapidamente: densidade $\rho$ e viscosidade dinâmica $\mu$.
+    \item Explicar que, no projeto, essas propriedades não são fixas: são calculadas em função de \textbf{temperatura} e \textbf{pressão} usando uma base de dados termodinâmica.
+    \item Deixar claro: cada escolha de fluido/temperatura muda $\rho$ e $\mu$, logo altera $Re$, perdas de carga e resultado da simulação.
+\end{itemize}
+
+\subsection*{2.2 Número de Reynolds e regime de escoamento}
+\begin{itemize}
+    \item Recordar a expressão: $Re = \dfrac{\rho V D}{\mu}$.
+    \item Explicar o significado físico: razão entre forças de inércia e forças viscosas.
+    \item Comentar como o simulador classifica o regime: laminar, transição ou turbulento, e como isso é mostrado diretamente na interface.
+\end{itemize}
+
+\subsection*{2.3 Equação de Bernoulli e energia no escoamento}
+\begin{itemize}
+    \item Mostrar a forma básica: $\dfrac{P}{\rho g} + \dfrac{V^2}{2g} + z$.
+    \item Explicar que, entre entrada e garganta, o aumento de velocidade gera queda de pressão estática.
+    \item Destacar que o simulador trabalha com duas visões:
+    \begin{itemize}
+        \item \textbf{Modo Ideal}: Bernoulli sem perdas ($h_L = 0$).
+        \item \textbf{Modo Realista}: Bernoulli estendida com termos de perda de carga.
+    \end{itemize}
+\end{itemize}
+
+\section*{3. Como Cada Equação Aparece no Projeto (4--5 min)}
+\subsection*{3.1 Continuidade}
+\begin{itemize}
+    \item Explicar que o usuário pode escolher $Q$, $v_1$ ou $v_2$.
+    \item Mostrar a relação usada no código: $Q = A_1 v_1 = A_2 v_2$.
+    \item Deixar claro: ao mexer em $D_1$ e $D_2$, o simulador recalcula $A_1$, $A_2$ e automaticamente ajusta as velocidades.
+\end{itemize}
+
+\subsection*{3.2 Bernoulli entre entrada e garganta}
+\begin{itemize}
+    \item Destacar a forma usada no modo ideal: 
+    \[
+        P_2 = P_1 - \frac{1}{2}\rho\,(V_2^2 - V_1^2).
+    \]
+    \item Explicar fisicamente: parte da energia de pressão é convertida em energia cinética na garganta.
+    \item Comentar que isso aparece na prática como uma queda na curva de pressão até a seção 2.
+\end{itemize}
+
+\subsection*{3.3 Perdas de carga em dutos (modo realista)}
+\begin{itemize}
+    \item Relembrar rapidamente a equação de Darcy--Weisbach:
+    \[
+        h_f = f \frac{L}{D}\,\frac{V^2}{2g}.
+    \]
+    \item Explicar que o simulador calcula $f$ em função de $Re$ e da rugosidade do material do tubo.
+    \item Comentar também as \textbf{perdas localizadas}:
+    \begin{itemize}
+        \item coeficiente na entrada ($k_{\text{entrada}}$);
+        \item coeficiente no difusor ($K_{\text{difusor}}$) baseado na razão de áreas.
+    \end{itemize}
+    \item Conectar com a equação de energia completa: 
+    \[
+        \frac{P_1}{\gamma} + \frac{V_1^2}{2g}
+        =
+        \frac{P_2}{\gamma} + \frac{V_2^2}{2g}
+        + h_f + \sum h_s.
+    \]
+\end{itemize}
+
+\subsection*{3.4 Manometria}
+\begin{itemize}
+    \item Relembrar a equação do manômetro em U:
+    \[
+        \Delta P = (\rho_m - \rho) g\, \Delta h.
+    \]
+    \item Explicar que, depois de calcular $\Delta P = P_1 - P_2$, o código isola $\Delta h$.
+    \item Comentar que o valor de $\Delta h$ (em cm) é mostrado como se fosse a leitura real do manômetro.
+\end{itemize}
+
+\section*{4. O que o Projeto Calcula (2--3 min)}
+\begin{itemize}
+    \item Listar as saídas principais exibidas na interface:
+    \begin{itemize}
+        \item Vazão $Q$ (L/s e m$^3$/h).
+        \item Velocidades $v_1$ e $v_2$.
+        \item Pressões $P_1$, $P_2$, $P_3$.
+        \item Diferença de pressão $\Delta P$.
+        \item Desnível manométrico $\Delta h$.
+        \item Número de Reynolds e regime de escoamento.
+        \item Perda de carga total $h_L$.
+    \end{itemize}
+    \item Explicar que cada uma dessas saídas tem \textbf{interpretação física direta}:
+    \begin{itemize}
+        \item se $h_L$ aumenta, o sistema consome mais energia;
+        \item se $\Delta h$ aumenta, o medidor fica mais sensível, mas também pode causar maiores perdas;
+        \item se $Re$ muda de laminar para turbulento, o fator de atrito e as perdas mudam de ordem de grandeza.
+    \end{itemize}
+\end{itemize}
+
+\section*{5. Demonstração Resumida do Funcionamento (2--3 min)}
+\begin{itemize}
+    \item Escolher um cenário padrão para apresentar:
+    \begin{itemize}
+        \item Fluido: água a 20$^\circ$C.
+        \item Geometria: $D_1 = 0{,}10$ m, $D_2 = 0{,}05$ m, $L_{\text{garganta}} = 1{,}0$ m.
+        \item Escoamento: $Q \approx 0{,}01$ m$^3$/s.
+    \end{itemize}
+    \item Mostrar no modo ideal:
+    \begin{itemize}
+        \item aumento de velocidade na garganta;
+        \item queda de pressão entre 1 e 2;
+        \item recuperação quase total de pressão em 3;
+        \item leitura de $\Delta h$ no manômetro.
+    \end{itemize}
+    \item Em seguida, trocar para modo realista:
+    \begin{itemize}
+        \item explicar que agora o fator de atrito $f$ entra no cálculo;
+        \item mostrar que a linha de pressão em 3 fica abaixo de $P_1$;
+        \item comentar o aumento da perda de carga $h_L$ e o efeito na curva de energia.
+    \end{itemize}
+\end{itemize}
+
+\section*{6. Conclusão: Conexão Teoria--Prática (1--2 min)}
+\begin{itemize}
+    \item Reforçar que o projeto pega os conceitos principais da disciplina:
+    \begin{itemize}
+        \item propriedades dos fluidos;
+        \item equações de continuidade e energia;
+        \item perdas de carga em dutos;
+        \item manometria.
+    \end{itemize}
+    \item Explicar que a Engenharia de Computação entra para:
+    \begin{itemize}
+        \item automatizar os cálculos;
+        \item garantir consistência das unidades e das equações;
+        \item gerar visualizações que ajudam a interpretar fisicamente os resultados.
+    \end{itemize}
+    \item Encerrar destacando o aprendizado:
+    \begin{itemize}
+        \item como pequenas mudanças em $D_1$, $D_2$, fluido ou regime modificam drasticamente o comportamento do sistema;
+        \item como o simulador pode ser usado tanto para estudo quanto para apoio em dimensionamento preliminar de medidores de Venturi.
+    \end{itemize}
+\end{itemize}
+
+\end{document}
+
+
