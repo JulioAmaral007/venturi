@@ -180,17 +180,9 @@ def render_sistema_tubulacoes():
         st.latex(r"h_s = K \frac{V^2}{2g}")
         
         st.markdown("""
-        **Coeficientes K típicos:**
+        **Coeficientes K típicos usados no simulador:**
         
-        - Contração: K = 0.5(1-β²)
-        - Expansão: K = (1-β²)²
-        - Curva 90°: K = 0.3
-        - Válvula gaveta: K = 0.15
-        - Válvula globo: K = 10.0
-        - Válvula esfera: K = 0.05
-        - Válvula retenção: K = 2.5
-        - Tê passagem: K = 0.6
-        - Tê lateral: K = 1.8
+        - Curva 15°: K = 0.04
         
         **Perda Total:**
         """)
@@ -586,7 +578,7 @@ def main():
                     help="Velocidade na seção de entrada"
                 )
                 Q = v1_input * area_entrada
-                st.caption(f"Vazão equivalente: {Q*1000:.2f} L/s")
+                st.caption(f"Vazão equivalente: {Q:.4f} m³/s")
             else:
                 v2_input = st.slider(
                     "v₂ - Velocidade na garganta (m/s)",
@@ -598,7 +590,7 @@ def main():
                     help="Velocidade na garganta"
                 )
                 Q = v2_input * area_garganta
-                st.caption(f"Vazão equivalente: {Q*1000:.2f} L/s")
+                st.caption(f"Vazão equivalente: {Q:.4f} m³/s")
             
             delta_h = None  # Será calculado
         
@@ -634,8 +626,14 @@ def main():
             
     # Validação com feedback visual
     beta = D2 / D1
-    if D2 >= D1 or (beta < 0.3) or (beta > 0.75):
+    if D2 >= D1:
         st.error("⚠️ Ajuste necessário: D₂ precisa ser menor que D₁ para garantir aceleração do escoamento.")
+        st.stop()
+    elif beta < 0.3:
+        st.error(f"⚠️ Ajuste necessário: β = {beta:.3f} está muito baixo (mínimo recomendado: 0.3). D₂ está muito pequeno em relação a D₁.")
+        st.stop()
+    elif beta > 0.75:
+        st.error(f"⚠️ Ajuste necessário: β = {beta:.3f} está muito alto (máximo recomendado: 0.75). D₂ está muito próximo de D₁.")
         st.stop()
     elif beta < 0.4 or beta > 0.7:
         st.warning(f"⚠️ Atenção: β = {beta:.3f} está fora da faixa recomendada (0.4 - 0.7).")
@@ -686,7 +684,7 @@ def main():
     with col1:
         st.metric(
             "Vazão Q",
-            f"{sim.Q*1000:.2f} L/s",
+            f"{sim.Q:.4f} m³/s",
             f"{sim.Q*3600:.1f} m³/h",
             help="Vazão volumétrica do fluido"
         )
@@ -794,9 +792,13 @@ def main():
     
     with tab2:
         st.subheader("Resultados Numéricos Completos")
-        st.caption("Detalhe completo das propriedades calculadas. Use para relatórios ou calibrações.")
+        st.caption(f"Detalhe completo das propriedades calculadas - Modo: {mode}. Use para relatórios ou calibrações.")
         
         Re = sim.calcular_reynolds()
+        
+        # Obter P2_fim (pode não existir em versões antigas, usar fallback)
+        P2_fim = getattr(sim, 'P2_fim', sim.P2)
+        P3 = getattr(sim, 'P3', sim.P1)
         
         col_a, col_b = st.columns(2)
         
@@ -807,35 +809,51 @@ def main():
             st.write(f"• A₁ = {sim.A1:.6f} m²")
             st.write(f"• A₂ = {sim.A2:.6f} m²")
             st.write(f"• β = D₂/D₁ = {sim.D2/sim.D1:.3f}")
+            st.write(f"• L (garganta) = {sim.L_garganta:.3f} m")
+            if hasattr(sim, 'L_entrada') and hasattr(sim, 'L_saida'):
+                st.write(f"• L (entrada) = {sim.L_entrada:.3f} m")
+                st.write(f"• L (saída) = {sim.L_saida:.3f} m")
+                st.write(f"• L (total) = {sim.L:.3f} m")
             
             st.markdown("")
-            st.markdown("**PROPRIEDADES:**")
+            st.markdown("**PROPRIEDADES DO FLUIDO:**")
             st.write(f"• ρ (fluido) = {sim.rho:.0f} kg/m³")
+            st.write(f"• μ (viscosidade) = {sim.mu:.2e} Pa·s")
             st.write(f"• ρₘ (manométrico) = {sim.rho_m:.0f} kg/m³")
             
             st.markdown("")
             st.markdown("**VELOCIDADES:**")
-            st.write(f"• v₁ = {sim.v1:.3f} m/s")
-            st.write(f"• v₂ = {sim.v2:.3f} m/s")
+            st.write(f"• v₁ (entrada) = {sim.v1:.3f} m/s")
+            st.write(f"• v₂ (garganta) = {sim.v2:.3f} m/s")
             st.write(f"• Razão v₂/v₁ = {sim.v2/sim.v1:.2f}")
         
         with col_b:
-            st.markdown("**PRESSÕES:**")
-            st.write(f"• P₁ = {sim.P1/1000:.2f} kPa")
-            st.write(f"• P₂ = {sim.P2/1000:.2f} kPa")
-            st.write(f"• ΔP = {sim.delta_P/1000:.3f} kPa")
+            st.markdown("**PRESSÕES (manométricas):**")
+            st.write(f"• P₁ (entrada) = {sim.P1/1000:.2f} kPa")
+            st.write(f"• P₂ (início garganta) = {sim.P2/1000:.2f} kPa")
+            st.write(f"• P₂ (fim garganta) = {P2_fim/1000:.2f} kPa")
+            st.write(f"• P₃ (saída) = {P3/1000:.2f} kPa")
+            st.write(f"• ΔP (P₁ - P₂) = {sim.delta_P/1000:.3f} kPa")
+            
+            if mode == 'Realista':
+                perda_garganta = sim.P2 - P2_fim
+                if perda_garganta > 0:
+                    st.write(f"• ΔP (perda na garganta) = {perda_garganta/1000:.3f} kPa")
+                recuperacao = P3 - P2_fim
+                if recuperacao > 0:
+                    st.write(f"• ΔP (recuperação no difusor) = {recuperacao/1000:.3f} kPa")
             
             st.markdown("")
-            st.markdown("**MEDIÇÕES:**")
-            st.write(f"• Vazão Q = {sim.Q*1000:.2f} L/s ({sim.Q*3600:.2f} m³/h)")
-            st.write(f"• Δh (manômetro) = {sim.delta_h*100:.2f} cm")
-            st.write(f"• Reynolds = {Re:.0f}")
+            st.markdown("**MEDIÇÕES E PARÂMETROS:**")
+            st.write(f"• Vazão Q = {sim.Q:.4f} m³/s ({sim.Q*3600:.2f} m³/h)")
+            st.write(f"• Δh (manômetro) = {sim.delta_h*100:.2f} cm ({sim.delta_h:.4f} m)")
+            st.write(f"• Reynolds (Re) = {Re:.0f}")
+            if mode == 'Realista':
+                st.write(f"• Fator de atrito (f) = {sim.f:.4f}")
             
             st.markdown("")
             st.markdown("**ENERGIA:**")
-            st.write(f"• Carga cinética (1) = {sim.v1**2/(2*sim.g):.4f} m")
-            st.write(f"• Carga cinética (2) = {sim.v2**2/(2*sim.g):.4f} m")
-            st.write(f"• Perda de carga hₗ = {sim.h_L:.4f} m")
+            st.write(f"• Perda de carga total hₗ = {sim.h_L:.4f} m")
         
         # Indicador de regime
         st.markdown("---")
@@ -846,6 +864,26 @@ def main():
             st.info("Regime de TRANSIÇÃO (2300 < Re < 4000): condições intermediárias, atenção aos parâmetros.", icon="🔄")
         else:
             st.success("Regime TURBULENTO (Re > 4000): operação típica para Venturi industriais.", icon="✅")
+        
+        # Informações específicas do modo
+        st.markdown("---")
+        st.markdown(f"**Informações do Modo {mode}:**")
+        if mode == 'Ideal':
+            st.info("""
+            **Modo Ideal:**
+            - Sem perdas por atrito (hₗ = 0)
+            - P₂ (início) = P₂ (fim) na garganta (sem perdas)
+            - P₃ = P₁ (recuperação total de pressão)
+            - Ideal para comparação teórica e validação de cálculos
+            """)
+        else:
+            st.info("""
+            **Modo Realista:**
+            - Considera perdas por atrito nas paredes
+            - P₂ (fim) < P₂ (início) devido às perdas na garganta
+            - P₃ < P₁ devido às perdas totais (entrada + garganta + difusor)
+            - Mais próximo das condições reais de operação
+            """)
     
     with tab3:
         render_sobre_projeto()
