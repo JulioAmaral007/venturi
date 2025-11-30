@@ -807,12 +807,12 @@ def main():
             st.write(f"• D₂ = {sim.D2:.3f} m")
             st.write(f"• A₁ = {sim.A1:.6f} m²")
             st.write(f"• A₂ = {sim.A2:.6f} m²")
-            st.write(f"• β = D₂/D₁ = {sim.D2/sim.D1:.3f}")
+            st.write(f"• D₁/D₂ = {sim.D1/sim.D2:.3f}")
             st.write(f"• L (garganta) = {sim.L_garganta:.3f} m")
             if hasattr(sim, 'L_entrada') and hasattr(sim, 'L_saida'):
                 st.write(f"• L (entrada) = {sim.L_entrada:.3f} m")
                 st.write(f"• L (saída) = {sim.L_saida:.3f} m")
-                st.write(f"• L (total) = {sim.L:.3f} m")
+                st.write(f"• L (total) = {sim.L:.3f} m")                                                                
             
             st.markdown("")
             st.markdown("**PROPRIEDADES DO FLUIDO:**")
