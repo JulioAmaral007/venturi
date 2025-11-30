@@ -286,7 +286,7 @@ def render_sobre_projeto():
     
     st.markdown("""
     O Venturi funciona ao acelerar o fluido na garganta e medir a diferença de pressão entre as seções de
-    entrada e estrangulamento. Essa diferença, combinada com a razão geométrica β, permite calcular a vazão
+    entrada e estrangulamento. Essa diferença, combinada com a **razão entre diâmetros** $\\beta$, permite calcular a vazão
     com precisão superior à de orifícios simples, com menores perdas de carga permanentes.
     """)
     
@@ -303,7 +303,7 @@ def render_sobre_projeto():
     
     - Presets de fluidos com propriedades prontas (água em diferentes temperaturas, óleos, etc.).
     - Modo **Ideal** e **Realista**, com seleção direta na interface.
-    - Ajuste manual ou automático de densidade do fluido e fluido manométrico fixo (Hg).
+    - Ajuste manual da densidade do fluido manométrico.
     
     #### Simulação do Venturi
     
@@ -313,32 +313,45 @@ def render_sobre_projeto():
       - Velocidade na entrada (v₁)
       - Velocidade na garganta (v₂)
     - Parâmetros avançados: material do tubo (para cálculo automático do coeficiente de atrito no modo Realista).
-    - Indicadores automáticos de β, número de Reynolds e regime de escoamento.
+    - Indicadores automáticos de razão entre diâmetros, número de Reynolds e regime de escoamento.
     - Visualizações: diagrama esquemático, perfil de pressão e linhas de energia.
     
     #### Exemplos Práticos
     
     - Conjunto de cenários prontos para comparação entre modos ideal/real, curvas de calibração,
-      uso como medidor e efeito da razão β.
+      uso como medidor e efeito da geometria.
     
     ### 📊 Métodos de Cálculo
     """)
     
-    st.markdown("#### Continuidade e equações principais")
-    st.latex(r"A = \pi D^2 / 4")
-    st.latex(r"V = \frac{Q}{A}")
+    st.markdown("#### Continuidade")
+    st.latex(r"Q = A_1 V_1 = A_2 V_2")
     
     st.markdown("#### Número de Reynolds")
     st.latex(r"Re = \frac{\rho V D}{\mu}")
     
-    st.markdown("#### Equação de energia para o Venturi")
-    st.latex(r"\frac{P_1}{\rho g} + \frac{V_1^2}{2g} + z_1 = \frac{P_2}{\rho g} + \frac{V_2^2}{2g} + z_2 + h_L")
+    st.markdown("#### Equação da Energia (Bernoulli Estendida)")
+    st.latex(r"\frac{P_1}{\rho g} + \frac{V_1^2}{2g} + z_1 = \frac{P_3}{\rho g} + \frac{V_3^2}{2g} + z_3 + h_{L,total}")
     
-    st.markdown("#### Relação manométrica")
+    st.markdown("#### Perdas de Carga (Modo Realista)")
+    st.markdown("A perda de carga total é a soma das perdas nos três componentes do medidor:")
+    st.latex(r"h_{L,total} = h_{entrada} + h_{garganta} + h_{difusor}")
+    
+    st.markdown("**1. Perda na Entrada (Bocal):**")
+    st.caption("Perda localizada devido à contração suave (K ≈ 0.04).")
+    st.latex(r"h_{entrada} = 0,04 \frac{V_{garganta}^2}{2g}")
+
+    st.markdown("**2. Perda na Garganta (Atrito):**")
+    st.caption("Perda distribuída no trecho reto usando a equação de Darcy-Weisbach.")
+    st.latex(r"h_{garganta} = f \frac{L_{garganta}}{D_{garganta}} \frac{V_{garganta}^2}{2g}")
+
+    st.markdown("**3. Perda no Difusor (Saída):**")
+    st.caption("Baseada na eficiência de recuperação de pressão ($C_p$) para difusores cônicos (Fox & McDonald).")
+    st.latex(r"C_{p,ideal} = 1 - \frac{1}{AR^2} \quad \text{onde } AR = \left(\frac{D_{saida}}{D_{garganta}}\right)^2")
+    st.latex(r"h_{difusor} = (C_{p,ideal} - C_{p,real}) \frac{V_{garganta}^2}{2g}")
+    
+    st.markdown("#### Relação Manométrica")
     st.latex(r"\Delta P = (\rho_m - \rho) g \Delta h")
-    
-    st.markdown("#### Vazão corrigida (modo Realista)")
-    st.latex(r"Q = C_d A_2 \sqrt{\frac{2 (P_1 - P_2)}{\rho (1 - \beta^4)}}")
     
     st.markdown("""
     ### 🛠️ Tecnologias
@@ -349,15 +362,9 @@ def render_sobre_projeto():
     
     ### 💡 Dicas de Uso
     
-    1. Ajuste β dentro da faixa recomendada (0.4 a 0.7) para manter boa sensibilidade.
-    2. Utilize o modo Realista para avaliar efeitos de atrito.
+    1. Ajuste a **razão entre diâmetros** dentro da faixa recomendada (1 a 2).
+    2. Utilize o modo Realista para avaliar efeitos de atrito e recuperação de pressão incompleta.
     3. Varie os parâmetros de entrada para analisar diferentes cenários de escoamento.
-    4. Teste os exemplos prontos para validar interpretações ou preparar aulas/demonstrações.
-    """)
-    
-    st.info("""
-    **💡 Dica:** Utilize os gráficos da aba "Visão Geral" para identificar rapidamente impactos em pressão, energia e vazão.
-    Experimente diferentes modos de entrada (vazão, velocidade na entrada ou velocidade na garganta) para analisar o comportamento do sistema.
     """)
 
 
