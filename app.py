@@ -259,9 +259,7 @@ def render_sistema_tubulacoes():
         
         4. **Refine parâmetros avançados** (material do tubo) quando quiser estudar efeitos de atrito no modo Realista.
         
-        5. **Analise as métricas principais** exibidas logo após os parâmetros e utilize as abas para visualizar diagramas, linhas de energia e dados completos.
-        
-        6. **Compare com os exemplos práticos** selecionando "Exemplos Práticos" na barra lateral para validar cenários típicos.
+        5. **Analise as métricas principais** exibidas logo após os parâmetros
         """)
 
 
@@ -315,11 +313,6 @@ def render_sobre_projeto():
     - Parâmetros avançados: material do tubo (para cálculo automático do coeficiente de atrito no modo Realista).
     - Indicadores automáticos de razão entre diâmetros, número de Reynolds e regime de escoamento.
     - Visualizações: diagrama esquemático, perfil de pressão e linhas de energia.
-    
-    #### Exemplos Práticos
-    
-    - Conjunto de cenários prontos para comparação entre modos ideal/real, curvas de calibração,
-      uso como medidor e efeito da geometria.
     
     ### 📊 Métodos de Cálculo
     """)
