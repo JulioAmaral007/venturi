@@ -105,3 +105,22 @@ class VenturiSimulator:
         k_difusor = cp_ideal - cp_real
         
         return max(0.0, k_difusor)
+    
+    def _obter_k_difusor_15_graus(self):
+
+        AR = (self.D1 / self.D2) ** 2
+ 
+        cp_ideal = 1.0 - (1.0 / AR**2)
+
+        if AR < 1.2:
+            cp_real = 1.4 * (AR - 1.0)
+        elif AR > 4.0:
+            cp_real = 0.64
+        else:
+            cp_real = (0.0394 * AR**3) - (0.3954 * AR**2) + (1.3095 * AR) - 0.7897
+            
+        cp_real = max(0.0, min(cp_real, cp_ideal))
+        
+        k_difusor = cp_ideal - cp_real
+        
+        return max(0.0, k_difusor)

@@ -641,6 +641,10 @@ def main():
     area_garganta_calc = np.pi * (D2 / 2) ** 2
     v2_calc = Q / area_garganta_calc if Q > 0 else 1.0
     Re_calc = (rho * v2_calc * D2) / mu if mu > 0 else 10000
+
+    if mode == 'Realista' and Re_calc < 75000:
+        st.error(f"⚠️ Ajuste necessário: Para melhor análise das perdas de carga, mantenha o regime como turbulento, Re > 75000.")
+        st.stop()
     
     # Calcular fator de atrito usando a rugosidade do material selecionado
     epsilon = obter_rugosidade_material(material_tubo)
