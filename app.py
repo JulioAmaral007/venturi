@@ -638,13 +638,13 @@ def main():
         st.stop()
     
     # Calcular número de Reynolds e fator de atrito baseado no material
-    area_entrada_calc = np.pi * (D1 / 2) ** 2
-    v1_calc = Q / area_entrada_calc if Q > 0 else 1.0
-    Re_calc = (rho * v1_calc * D1) / mu if mu > 0 else 10000
+    area_garganta_calc = np.pi * (D2 / 2) ** 2
+    v2_calc = Q / area_garganta_calc if Q > 0 else 1.0
+    Re_calc = (rho * v2_calc * D2) / mu if mu > 0 else 10000
     
     # Calcular fator de atrito usando a rugosidade do material selecionado
     epsilon = obter_rugosidade_material(material_tubo)
-    f = calcular_fator_atrito(Re_calc, epsilon, D1)
+    f = calcular_fator_atrito(Re_calc, epsilon, D2)
     
     # Exibir informações sobre o cálculo do atrito
     with st.expander("ℹ️ Informações do Cálculo de Atrito", expanded=True):

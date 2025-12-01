@@ -67,7 +67,7 @@ class VenturiSimulator:
         return h_f_garganta
     
     def calcular_reynolds(self):
-        Re = (self.rho * self.v1 * self.D1) / self.mu
+        Re = (self.rho * self.v2 * self.D2) / self.mu
         return Re
 
     def _calcular_geometria_automatica(self):
