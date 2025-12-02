@@ -788,7 +788,7 @@ def main():
         - **Energia de Pressão (azul)**: Área inferior que representa a carga piezométrica (P/ρg). 
         - **Energia Cinética (verde)**: Área intermediária que representa V²/2g.
         - **Perda de Carga (vermelho claro)**: Área superior que representa a energia dissipada por atrito e turbulência.
-        - **Linha Pontilhada Preta**: Indica o nível de pressão zero, útil quando há pressões negativas no sistema.
+        - **Linha Pontilhada Preta**: Indica o nível de pressão inicial, útil para comparação com o nível de pressão final.
         - **Perda Total**: Valor indicado no final do gráfico mostra a diferença entre a energia inicial e final.
         """)
     
