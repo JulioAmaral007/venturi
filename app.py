@@ -770,9 +770,6 @@ def main():
         
         - A queda abrupta na garganta representa a conversão de pressão em energia cinética.
         - No difusor, a pressão se recupera parcialmente; a diferença final corresponde à perda de carga total hₗ.
-        - Alterar o fator de atrito f ou o regime de escoamento modifica o gradiente exibido.
-        
-        **Uso prático:** identifique condições com recuperação insuficiente (difusor curto) e avalie o impacto de ajustes nos parâmetros de entrada.
         """)
         
         st.markdown("---")
@@ -784,15 +781,15 @@ def main():
         render_graph_explanation("""
         **O que este gráfico mostra:**
         
-        As linhas de energia total e piezométrica (energia de pressão + potencial) ao longo do Venturi.
+        Balanço de energia ao longo do Venturi, representado por áreas empilhadas que mostram a distribuição entre energia de pressão, energia cinética e perda de carga.
         
         **Como interpretar:**
         
-        - A linha roxa (energia total) evidencia o consumo de energia devido às perdas distribuídas/localizadas.
-        - A linha azul (piezométrica) acompanha a variação de pressão estática considerando a cota geométrica.
-        - A separação entre as linhas revela a contribuição da energia cinética (V²/2g).
-        
-        **Insights:** monitore a inclinação para verificar se o fator de atrito f está coerente e se o regime turbulento desejado está garantindo perdas controladas.
+        - **Energia de Pressão (azul)**: Área inferior que representa a carga piezométrica (P/ρg). 
+        - **Energia Cinética (verde)**: Área intermediária que representa V²/2g.
+        - **Perda de Carga (vermelho claro)**: Área superior que representa a energia dissipada por atrito e turbulência.
+        - **Linha Pontilhada Preta**: Indica o nível de pressão zero, útil quando há pressões negativas no sistema.
+        - **Perda Total**: Valor indicado no final do gráfico mostra a diferença entre a energia inicial e final.
         """)
     
     with tab2:
